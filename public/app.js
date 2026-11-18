@@ -5,7 +5,7 @@
   const DEFAULT = {
     ism: 'Ismi',
     kimdan: "Do'sting",
-    sozlar: ['Aqlli', 'Faol', 'Notiq', 'Ilhomlantiruvchi'],
+    sozlar: [],
     tabrik: "Tug'ilgan kuning muborak! 🎉",
     asosiyRasm: '',
     rasmlar: [],
@@ -13,7 +13,7 @@
   };
   let C = DEFAULT;
   try {
-    const res = await fetch('/config.json', { cache: 'no-store' });
+    const res = await fetch('config.json', { cache: 'no-store' });
     if (res.ok) {
       C = Object.assign({}, DEFAULT, await res.json());
     }
@@ -190,6 +190,100 @@
     }
   }
 
+  // ---------- Zarba to'lqini va konfetti ----------
+  const waves = [], confetti = [];
+  let flash = 0;
+  function shock(x, y, hue = 330) {
+    waves.push({ x, y, r: 10, a: 1, h: hue }, { x, y, r: 0, a: 0.7, h: hue + 40 });
+    flash = 0.22;
+    for (const p of parts) {
+      const dx = p.x - x, dy = p.y - y, d = Math.hypot(dx, dy) || 1;
+      if (p.tx === null) { const f = Math.max(0, 14 - d / 40); p.vx += (dx / d) * f; p.vy += (dy / d) * f; }
+    }
+  }
+  const CCOLS = ['#ff4fa3', '#ffd36e', '#7ad7ff', '#b892ff', '#7dffb2', '#ffffff', '#ff8a5c'];
+  function addConfetti(n, fromTop = true) {
+    for (let i = 0; i < n; i++) confetti.push({
+      x: Math.random() * W, y: fromTop ? -20 - Math.random() * H * 0.6 : H * 0.5,
+      vx: (Math.random() - 0.5) * 2, vy: Math.random() * 2 + 1.5,
+      w: Math.random() * 6 + 5, h: Math.random() * 4 + 3, r: Math.random() * 6.28,
+      vr: (Math.random() - 0.5) * 0.25, sw: Math.random() * 6.28, c: CCOLS[(Math.random() * CCOLS.length) | 0],
+    });
+  }
+  function drawFx() {
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = waves.length - 1; i >= 0; i--) {
+      const w = waves[i];
+      w.r += 9 + w.r * 0.035; w.a -= 0.018;
+      if (w.a <= 0) { waves.splice(i, 1); continue; }
+      ctx.strokeStyle = `hsla(${w.h},100%,70%,${w.a.toFixed(2)})`;
+      ctx.lineWidth = 3 + w.a * 5;
+      ctx.beginPath(); ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2); ctx.stroke();
+    }
+    if (flash > 0.01) {
+      const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+      g.addColorStop(0, `rgba(255,200,235,${flash.toFixed(2)})`); g.addColorStop(1, 'rgba(255,120,200,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); flash *= 0.9;
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    for (let i = confetti.length - 1; i >= 0; i--) {
+      const c = confetti[i];
+      c.sw += 0.05; c.x += c.vx + Math.sin(c.sw) * 0.8; c.y += c.vy; c.r += c.vr;
+      if (c.y > H + 30) { confetti.splice(i, 1); continue; }
+      ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.r);
+      ctx.scale(1, Math.cos(c.sw * 2)); ctx.fillStyle = c.c;
+      ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h); ctx.restore();
+    }
+  }
+
+  // ---------- Musiqa (fayl bo'lmasa, brauzerning o'zida "music box" chalinadi) ----------
+  let actx = null, master = null, musicOn = true, musicTimer = null;
+  const NOTE = (n) => 440 * Math.pow(2, (n - 69) / 12);
+  // Happy Birthday (xalq mulki): [midi nota, zarb davomiyligi]
+  const SONG = [[67,.75],[67,.25],[69,1],[67,1],[72,1],[71,2],[67,.75],[67,.25],[69,1],[67,1],[74,1],[72,2],
+    [67,.75],[67,.25],[79,1],[76,1],[72,1],[71,1],[69,2],[77,.75],[77,.25],[76,1],[72,1],[74,1],[72,3]];
+  const BASS = [[48,3],[55,3],[55,3],[48,3],[48,3],[53,3],[48,3],[55,1.5],[48,1.5]];
+  function initAudio() {
+    if (actx) return;
+    try {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      master = actx.createGain(); master.gain.value = 0.55;
+      const delay = actx.createDelay(), fb = actx.createGain(), wet = actx.createGain();
+      delay.delayTime.value = 0.32; fb.gain.value = 0.33; wet.gain.value = 0.35;
+      master.connect(actx.destination); master.connect(delay); delay.connect(fb); fb.connect(delay);
+      delay.connect(wet); wet.connect(actx.destination);
+    } catch (e) { actx = null; }
+  }
+  function bell(t, freq, dur, vol) {
+    [[1, 1], [2, 0.35], [3.01, 0.12]].forEach(([m, v]) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'sine'; o.frequency.value = freq * m;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol * v, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.05);
+    });
+  }
+  function playSong() {
+    if (!actx || !musicOn) return;
+    const beat = 0.5; let t = actx.currentTime + 0.1, tb = t;
+    for (const [n, d] of SONG) { bell(t, NOTE(n), Math.max(1.2, d * beat * 2), 0.22); t += d * beat; }
+    for (const [n, d] of BASS) { bell(tb, NOTE(n), d * beat * 1.5, 0.1); tb += d * beat; }
+    musicTimer = setTimeout(playSong, (t - actx.currentTime + 2.5) * 1000);
+  }
+  function sfx(type) {
+    if (!actx || !musicOn) return;
+    const t = actx.currentTime;
+    if (type === 'tick') bell(t, NOTE(84), 0.4, 0.12);
+    if (type === 'boom') {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.6);
+      g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.75);
+      [72, 76, 79, 84].forEach((n, i) => bell(t + i * 0.06, NOTE(n), 1.6, 0.12));
+    }
+  }
+  const buzz = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
   // ---------- Asosiy chizish sikli ----------
   function frame(t) {
     ctx.globalCompositeOperation = 'source-over';
@@ -218,6 +312,8 @@
     }
     ctx.globalCompositeOperation = 'lighter';
     drawFireworks();
+    drawFx();
+    if (finalMode && confetti.length < 90 && Math.random() < 0.25) addConfetti(1);
     requestAnimationFrame(frame);
   }
 
@@ -226,19 +322,23 @@
   let galleryOn = false, angle = 0, vel = 0.15, radius = 300, gImgs = [];
   function buildRing() {
     ring.innerHTML = '';
-    gImgs.forEach((g) => {
+    // Suratlar kam bo'lsa, halqa bo'sh ko'rinmasligi uchun takrorlanadi
+    const idx = [];
+    while (idx.length < 6 || idx.length % gImgs.length) idx.push(idx.length % gImgs.length);
+    idx.forEach((gi) => {
+      const g = gImgs[gi];
       const el = document.createElement('div');
       el.className = 'gcard';
       el.innerHTML = `<img src="${g.img.src}" alt="">` + (g.izoh ? `<div class="cap"></div>` : '');
       if (g.izoh) el.querySelector('.cap').textContent = g.izoh;
-      el.dataset.i = gImgs.indexOf(g);
+      el.dataset.i = gi;
       ring.appendChild(el);
     });
     layoutRing();
   }
   function layoutRing() {
-    const n = Math.max(gImgs.length, 3);
-    const cw = Math.min(190, W * 0.36), ch = cw * 1.3;
+    const n = Math.max(ring.children.length, 3);
+    const cw = Math.min(190, W * 0.3), ch = cw * 1.3;
     ring.style.setProperty('--cw', cw + 'px');
     ring.style.setProperty('--ch', ch + 'px');
     radius = cw / 2 / Math.tan(Math.PI / n) + 28;
@@ -295,16 +395,22 @@
     resetUI();
     try {
       for (const n of ['3', '2', '1']) {
-        show(() => assign(textPoints(n, mainBox()))); await S(950);
+        show(() => assign(textPoints(n, mainBox()))); sfx('tick'); buzz(25); await S(950);
         explode(); await S(220);
       }
-      show(() => assign(textPoints(C.ism, mainBox()))); await S(2900);
+      show(() => assign(textPoints(C.ism, mainBox()))); await S(900);
+      shock(W / 2, H / 2); sfx('boom'); buzz([40, 60, 40]);
+      setTimeout(() => { launch(W * 0.2, H * 0.25); launch(W * 0.8, H * 0.22); }, 200);
+      await S(2600);
       explode(); await S(650);
 
-      for (const w of C.sozlar) {
+      for (const w of (C.sozlar || [])) {
         show(() => assign(textPoints(w, mainBox()))); await S(1550);
         explode(); await S(380);
       }
+
+      show(() => assign(textPoints('Bugun —\nsening kuning', mainBox()))); await S(2300);
+      explode(); await S(500);
 
       // Asosiy surat: zarrachalardan yig'iladi
       if (mainImg) {
@@ -315,7 +421,7 @@
           Object.assign(hero.style, { left: r.rect.x + 'px', top: r.rect.y + 'px', width: r.rect.w + 'px', height: r.rect.h + 'px' });
         });
         await S(2800);
-        hero.classList.add('on'); await S(3000);
+        hero.classList.add('on'); shock(W / 2, H / 2, 40); await S(3600);
         hero.classList.remove('on'); await S(500);
         current = null; explode(); await S(800);
       }
@@ -333,7 +439,8 @@
 
       // Tabrik + salyut
       show(() => assign(textPoints("Tug'ilgan\nkuning\nmuborak!", mainBox())));
-      for (let i = 0; i < 4; i++) setTimeout(randomLaunch, 300 + i * 450);
+      setTimeout(() => { shock(W / 2, H / 2, 300); sfx('boom'); buzz([60, 80, 60]); addConfetti(220); }, 1100);
+      for (let i = 0; i < 7; i++) setTimeout(randomLaunch, 900 + i * 300);
       await S(3800);
       explode(); await S(600);
 
@@ -384,12 +491,31 @@
 
   let audio = null;
   if (C.musiqa) { audio = new Audio(C.musiqa); audio.loop = true; }
+  if (C.ism) document.title = C.ism + " uchun kichik sovg'a 🎁";
+
+  const muteBtn = $('mute');
+  muteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    musicOn = !musicOn; muteBtn.textContent = musicOn ? '🔊' : '🔇';
+    if (audio) { musicOn ? audio.play().catch(() => {}) : audio.pause(); }
+    else if (actx) { master.gain.value = musicOn ? 0.55 : 0; clearTimeout(musicTimer); if (musicOn) playSong(); }
+  });
 
   const btn = $('startBtn');
   btn.disabled = false; btn.textContent = 'Ochish ✨';
-  btn.addEventListener('click', () => {
-    $('start').classList.remove('on');
+  let opened = false;
+  btn.addEventListener('click', async () => {
+    if (opened) return; opened = true;
     if (audio) audio.play().catch(() => {});
-    run();
+    else { initAudio(); if (actx && actx.resume) actx.resume(); playSong(); }
+    $('start').classList.add('opening');
+    buzz(30);
+    const g = $('gift').getBoundingClientRect();
+    setTimeout(() => {
+      const x = g.left + g.width / 2, y = g.top + g.height / 2;
+      shock(x, y, 320); burst(x, y, 330); burst(x, y, 45); addConfetti(120);
+    }, 650);
+    setTimeout(() => { $('start').classList.remove('on'); muteBtn.classList.add('on'); }, 900);
+    setTimeout(run, 1500);
   });
 })();

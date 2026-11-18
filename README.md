@@ -21,7 +21,7 @@ U yerdagi `1.svg ... 6.svg` fayllari namuna, ularni o'chirib tashlasangiz bo'lad
 > 💡 **Asosiy surat** zarrachalardan yig'iladi. Buning uchun yuzi yaqindan, aniq ko'ringan va foni oddiy suratni tanlang.
 > 💡 Telefon suratlari juda katta bo'lsa (5–10 MB), sayt sekin ochiladi. Ularni ~1500px gacha kichraytirib oling.
 
-### 2. `config.json` faylini to'ldiring
+### 2. `public/config.json` faylini to'ldiring
 
 ```json
 {
@@ -58,12 +58,12 @@ Railway yoki Glitch ham xuddi shunday ishlaydi. Loyiha `PORT` muhit o'zgaruvchis
 ```
 tugilgan-kun/
 ├── server.js        ← Node.js server
-├── config.json      ← ✏️ ism, matn, suratlar shu yerda
 ├── package.json
 └── public/
     ├── index.html
     ├── style.css
     ├── app.js       ← animatsiyalar (zarrachalar, galereya, salyut)
+    ├── config.json  ← ✏️ ism, matn, suratlar shu yerda
     └── photos/      ← 📸 suratlaringiz shu yerga
 ```
 

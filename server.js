@@ -37,19 +37,14 @@ const server = http.createServer((req, res) => {
     return res.end('Bad request');
   }
 
-  let filePath;
-  if (cleanUrl === '/config.json') {
-    filePath = path.resolve(__dirname, 'config.json');
-  } else {
-    let rel = cleanUrl === '/' ? '/index.html' : cleanUrl;
-    rel = rel.replace(/^\/+/, '');
-    filePath = path.resolve(PUBLIC, rel);
+  let rel = cleanUrl === '/' ? '/index.html' : cleanUrl;
+  rel = rel.replace(/^\/+/, '');
+  const filePath = path.resolve(PUBLIC, rel);
 
-    // Path traversal himoyasi: filePath faqat PUBLIC katalogi ichida bo'lishi kerak
-    if (!filePath.startsWith(PUBLIC + path.sep) && filePath !== PUBLIC) {
-      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
-      return res.end('Taqiqlangan (Forbidden)');
-    }
+  // Path traversal himoyasi: filePath faqat PUBLIC katalogi ichida bo'lishi kerak
+  if (!filePath.startsWith(PUBLIC + path.sep) && filePath !== PUBLIC) {
+    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+    return res.end('Taqiqlangan (Forbidden)');
   }
 
   fs.stat(filePath, (err, stats) => {

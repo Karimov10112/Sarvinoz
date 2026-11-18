@@ -4,7 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#05030f">
-  <title>Tug'ilgan kuning muborak! 🎉</title>
+  <title>Senga kichik sovg'a bor 🎁</title>
+  <meta property="og:title" content="Senga kichik sovg'a bor 🎁">
+  <meta property="og:description" content="Ovozni yoqib, ochib ko'r ✨">
+  <meta name="description" content="Ovozni yoqib, ochib ko'r ✨">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,11 +15,13 @@
 
   <!-- Boshlang'ich ekran -->
   <div id="start" class="ov on">
-    <div class="gift">🎁</div>
+    <div class="gift" id="gift">🎁</div>
     <h1>Senga kichik sovg'a bor</h1>
     <p class="muted">Ovozni yoqib qo'y 🔊</p>
     <button id="startBtn" class="btn" disabled>Yuklanmoqda…</button>
   </div>
+
+  <button id="mute" class="mute" aria-label="Ovoz">🔊</button>
 
   <!-- Asosiy surat (zarrachalardan keyin paydo bo'ladi) -->
   <img id="hero" alt="">
