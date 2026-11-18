@@ -78,18 +78,25 @@
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
   // Matnni nuqtalarga aylantirish
-  function textPoints(text, box) {
+  // Nafis shriftlar: ism — qo'lyozma, qolgan yozuvlar — klassik serif
+  const FONTS = {
+    script: (fs) => `400 ${fs}px 'Great Vibes', 'Brush Script MT', cursive`,
+    serif: (fs) => `italic 500 ${fs}px 'Playfair Display', Georgia, serif`,
+    num: (fs) => `500 ${fs}px 'Playfair Display', Georgia, serif`,
+  };
+  function textPoints(text, box, kind = 'serif') {
     const lines = String(text).split('\n');
     const off = document.createElement('canvas');
     off.width = Math.ceil(W); off.height = Math.ceil(H);
     const o = off.getContext('2d', { willReadFrequently: true });
-    let fs = Math.min(box.maxH / (lines.length * 1.1), 240);
-    o.font = `800 ${fs}px ${FONT}`;
+    const mkFont = FONTS[kind] || FONTS.serif;
+    let fs = Math.min(box.maxH / (lines.length * 1.15), 260);
+    o.font = mkFont(fs);
     const mw = Math.max(...lines.map((l) => o.measureText(l).width));
     if (mw > box.maxW) fs *= box.maxW / mw;
-    o.font = `800 ${fs}px ${FONT}`;
+    o.font = mkFont(fs);
     o.textAlign = 'center'; o.textBaseline = 'middle'; o.fillStyle = '#fff';
-    const lh = fs * 1.08, top = box.cy - ((lines.length - 1) * lh) / 2;
+    const lh = fs * 1.15, top = box.cy - ((lines.length - 1) * lh) / 2;
     lines.forEach((l, i) => o.fillText(l, box.cx, top + i * lh));
     const ow = off.width, oh = off.height;
     const d = o.getImageData(0, 0, ow, oh).data;
@@ -99,7 +106,7 @@
     const pts = [];
     for (let y = 0; y < oh; y += s) for (let x = 0; x < ow; x += s)
       if (d[(y * ow + x) * 4 + 3] > 128) pts.push({ x, y, c: null });
-    return { pts, s, photo: false };
+    return { pts, s, photo: false, lines, fs, lh, top, cx: box.cx, font: mkFont(fs) };
   }
 
   // Suratni rangli nuqtalarga aylantirish
@@ -135,23 +142,45 @@
     parts.forEach((p, i) => {
       const t = r.pts[i];
       if (t) {
+        const fresh = p.tx === null;
         p.tx = t.x; p.ty = t.y;
-        p.col = t.c || `hsl(${(320 + (t.x / W) * 90) % 360},100%,68%)`;
-        p.sz = r.photo ? r.s * 1.02 : Math.max(1.7, r.s * 0.62);
+        // Oltin-shampan rangidagi nuqtalar
+        p.col = t.c || `hsl(${36 + Math.random() * 16},${70 + Math.random() * 30}%,${68 + Math.random() * 22}%)`;
+        p.sz = r.photo ? r.s * 1.02 : Math.max(1.4, r.s * 0.55);
+        if (fresh) p.d = Math.random() * 40; // har biri biroz kechikib, oqib keladi
       } else { p.tx = null; p.col = null; }
     });
   }
 
-  function explode() {
+  // Yozuvni sekin eritib yuborish (portlatmasdan)
+  function dissolve() {
     mode = 'text';
     for (const p of parts) {
       if (p.tx !== null) {
-        const a = Math.random() * Math.PI * 2, f = Math.random() * 22 + 6;
-        p.vx += Math.cos(a) * f; p.vy += Math.sin(a) * f;
+        p.vx += (Math.random() - 0.5) * 1.6;
+        p.vy += -Math.random() * 1.6 - 0.2;
       }
       p.tx = null; p.col = null;
     }
   }
+  const explode = dissolve;
+
+  // ---------- Tiniq oltin yozuv (nuqtalar yig'ilgandan keyin paydo bo'ladi) ----------
+  const titleEl = $('title');
+  let txtA = 1, txtTarget = 1;
+  function placeTitle(r) {
+    titleEl.innerHTML = '';
+    r.lines.forEach((l, i) => {
+      const sp = document.createElement('span');
+      sp.textContent = l;
+      sp.style.font = r.font;
+      sp.style.left = r.cx + 'px';
+      sp.style.top = (r.top + i * r.lh) + 'px';
+      titleEl.appendChild(sp);
+    });
+  }
+  function titleOn() { titleEl.classList.remove('out'); titleEl.classList.add('on'); txtTarget = 0.12; }
+  function titleOff() { titleEl.classList.add('out'); titleEl.classList.remove('on'); txtTarget = 1; }
 
   const show = (fn) => { current = fn; fn(); };
   const mainBox = () => ({ cx: W / 2, cy: H / 2, maxW: W * 0.88, maxH: H * 0.5 });
@@ -323,18 +352,23 @@
     ctx.globalCompositeOperation = mode === 'photo' ? 'source-over' : 'lighter';
     const R = Math.min(W, H) * 0.13, R2 = R * R;
     const repel = ptr.on && t - ptr.t < 1500; // faqat kursor/barmoq harakatlanganda
+    txtA += (txtTarget - txtA) * 0.04;
     for (const p of parts) {
-      const has = p.tx !== null;
-      const tx = has ? p.tx : p.hx, ty = has ? p.ty : p.hy, k = has ? 0.022 : 0.0015;
+      let has = p.tx !== null;
+      if (has && p.d > 0) { p.d--; }
+      const go = has && !(p.d > 0);
+      const tx = go ? p.tx : p.hx, ty = go ? p.ty : p.hy, k = go ? 0.012 : 0.0015;
       p.vx += (tx - p.x) * k; p.vy += (ty - p.y) * k;
       if (repel) {
         const dx = p.x - ptr.x, dy = p.y - ptr.y, d2 = dx * dx + dy * dy;
-        if (d2 < R2) { const d = Math.sqrt(d2) || 1, f = (1 - d / R) * 5; p.vx += (dx / d) * f; p.vy += (dy / d) * f; }
+        if (d2 < R2) { const d = Math.sqrt(d2) || 1, f = (1 - d / R) * 2.5; p.vx += (dx / d) * f; p.vy += (dy / d) * f; }
       }
-      p.vx *= 0.86; p.vy *= 0.86; p.x += p.vx; p.y += p.vy;
+      p.vx *= 0.85; p.vy *= 0.85; p.x += p.vx; p.y += p.vy;
       if (has) {
+        ctx.globalAlpha = mode === 'photo' ? 1 : txtA;
         ctx.fillStyle = p.col;
         ctx.fillRect(p.x - p.sz / 2, p.y - p.sz / 2, p.sz, p.sz);
+        ctx.globalAlpha = 1;
       } else {
         const a = 0.22 + 0.4 * (0.5 + 0.5 * Math.sin(t * 0.0015 + p.tw));
         ctx.fillStyle = `rgba(210,215,255,${a.toFixed(2)})`;
@@ -344,7 +378,7 @@
     ctx.globalCompositeOperation = 'lighter';
     drawFireworks();
     drawFx();
-    if (finalMode && confetti.length < 90 && Math.random() < 0.25) addConfetti(1);
+    if (finalMode && confetti.length < 40 && Math.random() < 0.12) addConfetti(1);
     requestAnimationFrame(frame);
   }
 
@@ -418,6 +452,7 @@
     stopVoice();
     $('sign').classList.remove('on');
     hero.classList.remove('on');
+    titleOff();
     galleryOn = false;
     galleryDone = null;
   }
@@ -427,31 +462,24 @@
     const S = (ms) => sleep(ms, id);
     resetUI();
     try {
-      for (const n of ['3', '2', '1']) {
-        show(() => assign(textPoints(n, mainBox()))); sfx('tick'); buzz(25); await S(950);
-        explode(); await S(220);
-      }
-      show(() => assign(textPoints(C.ism, mainBox()))); await S(900);
-      shock(W / 2, H / 2); sfx('boom'); buzz([40, 60, 40]);
-      setTimeout(() => { launch(W * 0.2, H * 0.25); launch(W * 0.8, H * 0.22); }, 200);
-      await S(2600);
-      explode(); await S(650);
+      // Yulduzlar sekin yig'ilib, tiniq oltin yozuvga aylanadi, keyin eriydi
+      const say = async (text, box, kind, hold, onShow) => {
+        txtTarget = 1;
+        show(() => { const r = textPoints(text, box(), kind); assign(r); placeTitle(r); });
+        await S(1700);
+        titleOn(); if (onShow) onShow();
+        await S(hold);
+        titleOff(); current = null; dissolve();
+        await S(1300);
+      };
+      await S(700);
+      await say(C.ism, () => ({ cx: W / 2, cy: H * 0.46, maxW: W * 0.9, maxH: H * 0.3 }), 'script', 2600, () => sfx('magic'));
 
-      for (const w of (C.sozlar || [])) {
-        show(() => assign(textPoints(w, mainBox()))); await S(1550);
-        explode(); await S(380);
-      }
+      for (const w of (C.sozlar || [])) await say(w, mainBox, 'serif', 1500);
 
-      show(() => assign(textPoints('Bugun —\nsizning kuningiz', mainBox()))); await S(2300);
-      explode(); await S(500);
+      await say('Bugun —\nsizning kuningiz', () => ({ cx: W / 2, cy: H / 2, maxW: W * 0.86, maxH: H * 0.3 }), 'serif', 2200);
 
-      if (C.yosh) {
-        show(() => assign(textPoints(String(C.yosh), { cx: W / 2, cy: H * 0.45, maxW: W * 0.7, maxH: H * 0.42 }))); await S(1000);
-        shock(W / 2, H * 0.45, 45); sfx('boom'); buzz([40, 50, 40]);
-        for (let i = 0; i < 3; i++) setTimeout(randomLaunch, 150 + i * 250);
-        await S(2400);
-        explode(); await S(600);
-      }
+      if (C.yosh) await say(String(C.yosh), () => ({ cx: W / 2, cy: H * 0.46, maxW: W * 0.6, maxH: H * 0.36 }), 'num', 2200, () => sfx('magic'));
 
       // Asosiy surat: zarrachalardan yig'iladi
       if (mainImg) {
@@ -462,7 +490,7 @@
           Object.assign(hero.style, { left: r.rect.x + 'px', top: r.rect.y + 'px', width: r.rect.w + 'px', height: r.rect.h + 'px' });
         });
         await S(2800);
-        hero.classList.add('on'); shock(W / 2, H / 2, 40); await S(3600);
+        hero.classList.add('on'); sfx('magic'); await S(3600);
         hero.classList.remove('on'); await S(500);
         current = null; explode(); await S(800);
       }
@@ -484,11 +512,9 @@
       $('cakeScene').classList.remove('on');
 
       // Tabrik + salyut
-      show(() => assign(textPoints("Tug'ilgan\nkuningiz\nmuborak!", mainBox())));
-      setTimeout(() => { shock(W / 2, H / 2, 300); sfx('boom'); buzz([60, 80, 60]); addConfetti(220); }, 900);
-      for (let i = 0; i < 7; i++) setTimeout(randomLaunch, 700 + i * 300);
-      await S(4200);
-      explode(); await S(700);
+      for (let i = 0; i < 6; i++) setTimeout(() => id === runId && randomLaunch(), 1900 + i * 380);
+      setTimeout(() => { if (id === runId) { addConfetti(90); buzz([30, 60, 30]); } }, 1800);
+      await say("Tug'ilgan kuningiz\nmuborak!", () => ({ cx: W / 2, cy: H * 0.45, maxW: W * 0.9, maxH: H * 0.3 }), 'serif', 3000, () => sfx('magic'));
 
       // Sharlar
       current = null;
@@ -499,9 +525,10 @@
 
       // Yakun
       finalMode = true;
-      show(() => assign(textPoints(C.ism, { cx: W / 2, cy: H * 0.2, maxW: W * 0.85, maxH: H * 0.22 })));
-      fwTimer = setInterval(randomLaunch, 1100);
-      await S(900);
+      txtTarget = 1;
+      show(() => { const r = textPoints(C.ism, { cx: W / 2, cy: H * 0.17, maxW: W * 0.85, maxH: H * 0.2 }, 'script'); assign(r); placeTitle(r); });
+      fwTimer = setInterval(randomLaunch, 1600);
+      await S(1700); titleOn();
       $('card').classList.add('on'); $('tapHint').classList.add('on');
       $('voiceBtn').hidden = !C.ovozliTabrik;
       typeText(C.tabrik, id);
@@ -779,6 +806,17 @@
     addConfetti(150);
   }
 
+  if (document.fonts && document.fonts.load) {
+    await Promise.race([
+      Promise.all([
+        document.fonts.load("40px 'Great Vibes'"),
+        document.fonts.load("italic 500 40px 'Playfair Display'"),
+        document.fonts.load("500 40px 'Playfair Display'"),
+      ]).catch(() => {}),
+      new Promise((r) => setTimeout(r, 3000)),
+    ]);
+  }
+
   const btn = $('startBtn');
   btn.disabled = false; btn.textContent = 'Ochish ✨';
   let opened = false;
@@ -791,7 +829,7 @@
     const g = $('gift').getBoundingClientRect();
     setTimeout(() => {
       const x = g.left + g.width / 2, y = g.top + g.height / 2;
-      shock(x, y, 320); burst(x, y, 330); burst(x, y, 45); addConfetti(120);
+      burst(x, y, 42); burst(x, y, 30); flash = 0.15;
     }, 650);
     setTimeout(() => { $('start').classList.remove('on'); muteBtn.classList.add('on'); }, 900);
     setTimeout(run, 1500);

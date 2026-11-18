@@ -232,3 +232,17 @@ h1 { font-size: clamp(26px, 6vw, 44px); margin: 12px 0 6px; font-weight: 800; }
   background: linear-gradient(135deg, #7a5cff, #ff4fa3); animation: pulse 2s ease-in-out infinite; }
 .btn.voice[hidden] { display: none; }
 .btn.voice.playing { animation: none; background: rgba(255,255,255,.15); }
+
+/* ---------- Tiniq oltin yozuv ---------- */
+.title { position: fixed; inset: 0; pointer-events: none; z-index: 4; }
+.title span {
+  position: absolute; transform: translate(-50%, -50%); white-space: nowrap; line-height: 1;
+  padding: .25em .35em;
+  background: linear-gradient(180deg, #fffaf0 0%, #f8e1a6 40%, #e2b25e 75%, #c98d3a 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 14px rgba(255, 205, 130, .45)) blur(6px);
+  opacity: 0; letter-spacing: -.01em;
+  transition: opacity 1.4s ease, filter 1.4s ease, letter-spacing 2.4s ease;
+}
+.title.on span { opacity: 1; letter-spacing: .015em; filter: drop-shadow(0 0 14px rgba(255, 205, 130, .45)) blur(0); }
+.title.out span { opacity: 0; filter: drop-shadow(0 0 14px rgba(255, 205, 130, 0)) blur(10px); transition: opacity 1s ease, filter 1s ease; }
