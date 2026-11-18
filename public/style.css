@@ -246,3 +246,30 @@ h1 { font-size: clamp(26px, 6vw, 44px); margin: 12px 0 6px; font-weight: 800; }
 }
 .title.on span { opacity: 1; letter-spacing: .015em; filter: drop-shadow(0 0 14px rgba(255, 205, 130, .45)) blur(0); }
 .title.out span { opacity: 0; filter: drop-shadow(0 0 14px rgba(255, 205, 130, 0)) blur(10px); transition: opacity 1s ease, filter 1s ease; }
+
+/* ---------- Boshqotirma ---------- */
+#hero.instant { transition: none !important; }
+.puzzle { position: fixed; z-index: 3; opacity: 0; pointer-events: none; transform: scale(1.04);
+  transition: opacity .9s ease; touch-action: none; }
+.puzzle.on { opacity: 1; pointer-events: auto; }
+.puzzle.fade { opacity: 0; transition: opacity 1s ease; }
+.pz { position: absolute; left: 0; top: 0; cursor: grab; background-repeat: no-repeat;
+  transition: transform .45s cubic-bezier(.3,1.25,.5,1), box-shadow .3s, filter .3s, border-radius .6s;
+  box-shadow: 0 0 0 0 rgba(0,0,0,0); will-change: transform; }
+.puzzle.split .pz { border-radius: 8px; box-shadow: 0 0 0 1.5px rgba(5,3,15,.95), 0 6px 18px rgba(0,0,0,.45); }
+.puzzle.split .pz.ok { box-shadow: 0 0 0 1.5px rgba(5,3,15,.95), inset 0 0 0 1.5px rgba(248,214,140,.55); }
+.pz.sel { z-index: 2; filter: brightness(1.15); box-shadow: 0 0 0 2.5px #f3cf86, 0 0 26px rgba(243,207,134,.7) !important; }
+.pz.drag { z-index: 3; transition: box-shadow .2s, filter .2s; cursor: grabbing; filter: brightness(1.1);
+  box-shadow: 0 0 0 2px #f3cf86, 0 16px 34px rgba(0,0,0,.6) !important; }
+.puzzle.solved .pz { border-radius: 0; box-shadow: none !important; }
+.puzzle.solved { animation: pzGlow 2.4s ease-in-out infinite; border-radius: 18px; overflow: hidden; }
+@keyframes pzGlow { 0%, 100% { box-shadow: 0 0 40px rgba(248,214,140,.35); } 50% { box-shadow: 0 0 80px rgba(248,214,140,.75); } }
+.pz-hint { position: fixed; left: 0; right: 0; top: calc(18px + env(safe-area-inset-top)); margin: 0; padding: 0 60px;
+  text-align: center; z-index: 4; font: italic 500 19px 'Playfair Display', Georgia, serif;
+  color: #f6dca0; text-shadow: 0 0 14px rgba(255,200,120,.45); opacity: 0; transition: opacity .8s; pointer-events: none; }
+.pz-hint.on { opacity: 1; }
+.pz-skip { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 4;
+  opacity: 0; pointer-events: none; transition: opacity .8s; }
+.pz-skip.on { opacity: 1; pointer-events: auto; }
+.puzzle { background: center / 100% 100% no-repeat; }
+.puzzle.solved .pz { opacity: 0; transition: opacity .6s ease .45s; }

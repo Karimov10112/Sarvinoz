@@ -490,9 +490,11 @@
           Object.assign(hero.style, { left: r.rect.x + 'px', top: r.rect.y + 'px', width: r.rect.w + 'px', height: r.rect.h + 'px' });
         });
         await S(2800);
-        hero.classList.add('on'); sfx('magic'); await S(3600);
-        hero.classList.remove('on'); await S(500);
-        current = null; explode(); await S(800);
+        hero.classList.add('on'); sfx('magic'); await S(2200);
+        // Rasm bo'laklarga bo'linadi — boshqotirma
+        current = null; dissolve();
+        await puzzleScene(mainImg.src); await S(0);
+        await S(900);
       }
 
       // Galereya
@@ -711,6 +713,128 @@
       });
       $('boxNext').onclick = () => done();
       sc.classList.add('on');
+    });
+  }
+
+  // ---------- Boshqotirma (puzzle) ----------
+  function puzzleScene(src) {
+    return new Promise((done) => {
+      const COLS = 3, ROWS = 4, n = COLS * ROWS;
+      const L = parseFloat(hero.style.left), T = parseFloat(hero.style.top);
+      const PW = parseFloat(hero.style.width), PH = parseFloat(hero.style.height);
+      const cw = PW / COLS, ch = PH / ROWS, gap = 3;
+      const box = $('puzzle'), hint = $('pzHint'), skip = $('pzSkip');
+      box.innerHTML = ''; box.className = 'puzzle on'; box.style.backgroundImage = 'none';
+      Object.assign(box.style, { left: L + 'px', top: T + 'px', width: PW + 'px', height: PH + 'px' });
+      hint.textContent = "Bo'laklarni almashtirib, rasmni yig'ing 🧩";
+      hint.classList.add('on');
+
+      // slot[i] = qaysi bo'lak i-joyda turibdi
+      let slot = [...Array(n).keys()];
+      const tiles = slot.map((pi) => {
+        const el = document.createElement('div');
+        el.className = 'pz';
+        const c = pi % COLS, r = (pi / COLS) | 0;
+        Object.assign(el.style, {
+          width: cw + 'px', height: ch + 'px',
+          backgroundImage: `url("${src}")`, backgroundSize: `${PW}px ${PH}px`,
+          backgroundPosition: `${-c * cw}px ${-r * ch}px`,
+        });
+        el.dataset.p = pi;
+        box.appendChild(el);
+        return el;
+      });
+      const place = (instant) => {
+        slot.forEach((pi, si) => {
+          const el = tiles[pi], c = si % COLS, r = (si / COLS) | 0;
+          if (instant) el.style.transition = 'none';
+          el.style.transform = `translate(${c * cw}px, ${r * ch}px)`;
+          el.classList.toggle('ok', pi === si);
+          if (instant) { void el.offsetWidth; el.style.transition = ''; }
+        });
+      };
+      place(true);
+      // Rasm o'rniga bir zumda bo'laklar qo'yiladi
+      hero.classList.add('instant'); hero.classList.remove('on');
+      requestAnimationFrame(() => hero.classList.remove('instant'));
+
+      let finished = false, sel = null, skipT = 0;
+      const cleanup = () => {
+        finished = true; clearTimeout(skipT);
+        box.className = 'puzzle'; hint.classList.remove('on'); skip.classList.remove('on');
+        setTimeout(() => { if (!box.classList.contains('on')) box.innerHTML = ''; }, 1200);
+      };
+      sceneCleanup.push(cleanup);
+
+      const solved = () => slot.every((pi, si) => pi === si);
+      const win = () => {
+        finished = true; clearTimeout(skipT);
+        skip.classList.remove('on');
+        if (sel) { sel.classList.remove('sel'); sel = null; }
+        box.style.backgroundImage = `url("${src}")`;
+        box.classList.add('solved');
+        hint.textContent = 'Barakalla! ✨';
+        sfx('magic'); buzz([30, 50, 30]);
+        const cx = L + PW / 2, cy = T + PH / 2;
+        setTimeout(() => { burst(cx, T + PH * 0.2, 42); burst(cx - PW * 0.3, cy, 35); burst(cx + PW * 0.3, cy, 50); }, 500);
+        setTimeout(() => { box.classList.add('fade'); hint.classList.remove('on'); }, 3200);
+        setTimeout(() => { cleanup(); done(); }, 4200);
+      };
+      const swap = (a, b) => {
+        const i = slot.indexOf(a), j = slot.indexOf(b);
+        [slot[i], slot[j]] = [slot[j], slot[i]];
+        place(false); sfx('tick'); buzz(12);
+        if (solved()) setTimeout(win, 450);
+      };
+
+      // Aralashtirish: hech bir bo'lak o'z joyida qolmasin
+      setTimeout(() => {
+        if (finished) return;
+        do { shuffle(slot); } while (slot.some((pi, si) => pi === si));
+        box.classList.add('split');
+        place(false);
+      }, 700);
+      skipT = setTimeout(() => skip.classList.add('on'), 25000);
+      skip.onclick = (e) => { e.stopPropagation(); if (finished) return; slot = [...Array(n).keys()]; place(false); setTimeout(win, 500); };
+
+      // Bosish yoki sudrab olib borish
+      let drag = null;
+      box.onpointerdown = (e) => {
+        if (finished) return;
+        const el = e.target.closest('.pz'); if (!el) return;
+        e.stopPropagation(); e.preventDefault();
+        drag = { el, x: e.clientX, y: e.clientY, moved: false, base: el.style.transform };
+        el.setPointerCapture(e.pointerId);
+      };
+      box.onpointermove = (e) => {
+        if (!drag) return;
+        const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+        if (!drag.moved && Math.hypot(dx, dy) < 8) return;
+        drag.moved = true;
+        drag.el.classList.add('drag');
+        const si = slot.indexOf(+drag.el.dataset.p), c = si % COLS, r = (si / COLS) | 0;
+        drag.el.style.transform = `translate(${c * cw + dx / 1.04}px, ${r * ch + dy / 1.04}px) scale(1.06)`;
+      };
+      box.onpointerup = (e) => {
+        if (!drag) return;
+        const d = drag; drag = null;
+        d.el.classList.remove('drag');
+        if (d.moved) {
+          // Konteyner 1.04 marta kattalashtirilgan — markazga nisbatan qayta hisoblaymiz
+          const ux = L + PW / 2 + (e.clientX - (L + PW / 2)) / 1.04, uy = T + PH / 2 + (e.clientY - (T + PH / 2)) / 1.04;
+          const c = Math.floor((ux - L) / cw), r = Math.floor((uy - T) / ch);
+          if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
+            const target = slot[r * COLS + c];
+            if (target !== +d.el.dataset.p) { if (sel) { sel.classList.remove('sel'); sel = null; } return swap(+d.el.dataset.p, target); }
+          }
+          return place(false);
+        }
+        // Oddiy bosish: birinchisini tanlash, ikkinchisi bilan almashtirish
+        if (!sel) { sel = d.el; sel.classList.add('sel'); return; }
+        if (sel === d.el) { sel.classList.remove('sel'); sel = null; return; }
+        const a = +sel.dataset.p; sel.classList.remove('sel'); sel = null;
+        swap(a, +d.el.dataset.p);
+      };
     });
   }
 
