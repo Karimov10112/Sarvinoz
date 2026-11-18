@@ -1,12 +1,35 @@
 {
   "ism": "Sarvinoz",
+  "yosh": 20,
   "kimdan": "Akang",
-  "sozlar": [],
   "tabrik": "Sarvinoz, tug'ilgan kuning muborak! 🎉\n\nHayotda shunday insonlar bo'ladiki, qon-qarindosh bo'lmasa ham, o'z singlingdek aziz bo'lib qoladi. Sen aynan shundaylardansan.\n\nDoim shunday chiroyli kulib yur, ko'zlaringdagi nur hech qachon so'nmasin. Barcha orzularing ushalsin, ishlaringda omad, oilangda tinchlik va baxt bo'lsin. Har bir yangi kuning bugungidan ham yorug'roq kelsin.\n\nBiror narsa kerak bo'lsa, akang doim yoningda ekanini unutma. 🤍",
   "asosiyRasm": "photos/1.webp",
   "rasmlar": [
-    { "fayl": "photos/1.webp", "izoh": "Doim shunday kulib yur 🌼" },
-    { "fayl": "photos/2.webp", "izoh": "Yorug' kunlar oldinda ✨" }
+    {
+      "fayl": "photos/1.webp",
+      "izoh": "Doim shunday kulib yur 🌼"
+    },
+    {
+      "fayl": "photos/2.webp",
+      "izoh": "Yorug' kunlar oldinda ✨"
+    }
   ],
-  "musiqa": ""
+  "musiqa": "",
+  "sana": "",
+  "ovozliTabrik": "",
+  "tilaklar": [
+    "Sog'lik 💪",
+    "Omad 🍀",
+    "Baxt 😊",
+    "Orzular ushalsin ✨",
+    "Doim kulgi 😄",
+    "Oilaga tinchlik 🕊️",
+    "Muvaffaqiyat 🏆",
+    "Yaxshi do'stlar 🤝"
+  ],
+  "sirliQutilar": [
+    "Bu kupon: istagan vaqtingda akangdan bitta muzqaymoq 🍦",
+    "Sen kulsang, atrofingdagilar ham kuladi. Shunday qolaver 🌼",
+    "Kelasi tug'ilgan kuningda bundan ham zo'r sovg'a bo'ladi 😎"
+  ]
 }

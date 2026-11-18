@@ -13,8 +13,23 @@
 <body>
   <canvas id="c"></canvas>
 
+  <!-- Kutish ekrani (tug'ilgan kunidan oldin) -->
+  <div id="wait" class="ov">
+    <div class="gift">⏳</div>
+    <h1 id="waitName">Hali erta 🤫</h1>
+    <p class="muted">Sovg'ang ochilishiga qoldi:</p>
+    <div class="timer">
+      <div><b id="wDays">0</b><span>kun</span></div>
+      <div><b id="wH">00</b><span>soat</span></div>
+      <div><b id="wM">00</b><span>daqiqa</span></div>
+      <div><b id="wS">00</b><span>soniya</span></div>
+    </div>
+    <p class="muted">Shu kuni qaytib kel 🎁</p>
+  </div>
+
   <!-- Boshlang'ich ekran -->
   <div id="start" class="ov on">
+    <p id="greet" class="greet"></p>
     <div class="gift" id="gift">🎁</div>
     <h1>Senga kichik sovg'a bor</h1>
     <p class="muted">Ovozni yoqib qo'y 🔊</p>
@@ -39,10 +54,43 @@
     <figure><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
   </div>
 
+  <!-- Tort va shamlar -->
+  <div id="cakeScene" class="ov">
+    <h2 class="g-title">Tilak tila 🎂</h2>
+    <div class="cake-wrap">
+      <div class="candles" id="candles"></div>
+      <div class="cake">
+        <div class="layer top"></div>
+        <div class="layer bottom"></div>
+        <div class="plate"></div>
+      </div>
+    </div>
+    <p class="muted" id="cakeHint"></p>
+    <div class="mic-meter" id="micMeter"><i id="micLvl"></i></div>
+  </div>
+
+  <!-- Sharlar -->
+  <div id="balloonScene" class="ov top">
+    <h2 class="g-title">Sharlarni yor 🎈</h2>
+    <p class="muted b-sub">Har birining ichida tilak bor</p>
+    <p class="muted b-count" id="bCount">0 / 0</p>
+    <div class="b-field" id="bField"></div>
+    <div class="b-got" id="bGot"></div>
+    <button id="bNext" class="btn small ghost">Davom etish →</button>
+  </div>
+
+  <!-- Sirli qutilar -->
+  <div id="boxScene" class="ov">
+    <h2 class="g-title" id="boxTitle">Bittasini tanla 🎁</h2>
+    <div class="boxes" id="boxes"></div>
+    <button id="boxNext" class="btn">Davom etish →</button>
+  </div>
+
   <!-- Yakuniy tabrik kartochkasi -->
   <div id="card" class="card">
     <p id="msg" class="msg"></p>
     <p id="sign" class="sign"></p>
+    <button id="voiceBtn" class="btn voice" hidden>🎙️ Akangdan ovozli xabar</button>
     <div class="row">
       <button id="fwBtn" class="btn small">🎆 Salyut</button>
       <button id="againBtn" class="btn small ghost">↻ Qaytadan</button>

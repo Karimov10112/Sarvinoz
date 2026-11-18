@@ -141,3 +141,94 @@ h1 { font-size: clamp(26px, 6vw, 44px); margin: 12px 0 6px; font-weight: 800; }
 }
 .mute.on { opacity: 1; pointer-events: auto; }
 .sign { font-size: 18px; }
+
+/* ---------- Salomlashish va kutish ---------- */
+.greet { margin: 0 0 6px; font-size: 16px; color: #ffd36e; letter-spacing: .3px; }
+.timer { display: flex; gap: 10px; margin: 6px 0 18px; }
+.timer div { width: 72px; padding: 12px 0; border-radius: 16px; background: rgba(255,255,255,.07);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.15), 0 0 30px rgba(255,79,163,.15); }
+.timer b { display: block; font-size: 30px; font-variant-numeric: tabular-nums; }
+.timer span { font-size: 12px; color: rgba(255,255,255,.6); }
+
+/* ---------- Tort ---------- */
+.cake-wrap { position: relative; width: 260px; height: 300px; margin: 10px auto 0; }
+.cake-wrap::before { content: ""; position: absolute; left: 50%; top: 40%; width: 360px; height: 360px;
+  transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(255,170,80,.22), transparent 65%); pointer-events: none; }
+.candles { position: absolute; left: 0; right: 0; bottom: 172px; display: flex; justify-content: center; align-items: flex-end; gap: 8px; z-index: 2; }
+.candle { position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 0 6px; }
+.candle span { font: 900 86px/0.82 "Segoe UI", system-ui, sans-serif; color: transparent;
+  background: repeating-linear-gradient(135deg, #ff6fae 0 9px, #fff 9px 18px); -webkit-background-clip: text; background-clip: text;
+  -webkit-text-stroke: 1.5px rgba(255,255,255,.6); filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
+.candle i { display: block; width: 14px; height: 70px; border-radius: 4px;
+  background: repeating-linear-gradient(160deg, #7ad7ff 0 8px, #fff 8px 16px); }
+.flame { --wind: 0; width: 18px; height: 32px; margin-bottom: 4px; border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+  background: radial-gradient(ellipse at 50% 72%, #fff 0 18%, #ffe27a 34%, #ff9a2b 66%, rgba(255,80,0,0) 72%);
+  box-shadow: 0 0 22px 8px rgba(255,180,60,.55), 0 0 70px 26px rgba(255,140,40,.22);
+  transform-origin: 50% 100%; animation: flick .12s infinite alternate; transition: opacity .25s, transform .25s; }
+@keyframes flick { from { transform: rotate(calc(var(--wind) * 35deg)) scaleY(1); } to { transform: rotate(calc(var(--wind) * 40deg + 3deg)) scaleY(1.12) scaleX(.9); } }
+.candle.out .flame { animation: none; opacity: 0; transform: scale(.2); }
+.candle.out::before { content: ""; position: absolute; top: 4px; left: 50%; width: 14px; height: 14px; border-radius: 50%;
+  background: rgba(220,220,230,.5); filter: blur(5px); animation: smoke 1.6s ease-out forwards; }
+@keyframes smoke { from { transform: translate(-50%, 0) scale(.6); opacity: .9; } to { transform: translate(-30%, -80px) scale(2.6); opacity: 0; } }
+.cake .layer { position: absolute; border-radius: 16px 16px 8px 8px; }
+.cake .top { left: 34px; right: 34px; bottom: 110px; height: 66px;
+  background: linear-gradient(#ffe3ef, #ffb6d3); box-shadow: inset 0 -8px 0 rgba(0,0,0,.06); }
+.cake .bottom { left: 10px; right: 10px; bottom: 34px; height: 82px;
+  background: linear-gradient(#ff9ec7, #ff6fa8); box-shadow: inset 0 -10px 0 rgba(0,0,0,.08); }
+.cake .layer::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 22px; border-radius: 16px 16px 0 0;
+  background: radial-gradient(circle at 11px 6px, #fff 10px, transparent 11px) 0 6px / 22px 22px repeat-x, linear-gradient(#fff, #fff) 0 0 / 100% 10px no-repeat; }
+.cake .bottom::after { content: ""; position: absolute; left: 14px; right: 14px; top: 46px; height: 8px;
+  background: radial-gradient(circle, #ffd36e 3px, transparent 4px) 0 0 / 18px 8px repeat-x; }
+.cake .plate { position: absolute; left: -16px; right: -16px; bottom: 18px; height: 22px; border-radius: 50%;
+  background: linear-gradient(#f3f1ff, #b9b4d9); box-shadow: 0 10px 30px rgba(0,0,0,.4); z-index: -1; }
+.mic-meter { width: 160px; height: 6px; border-radius: 9px; background: rgba(255,255,255,.12); overflow: hidden; opacity: 0; transition: opacity .5s; margin-top: -12px; }
+.mic-meter.on { opacity: 1; }
+.mic-meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #7ad7ff, #ff4fa3); transition: width .08s; }
+
+/* ---------- Sharlar ---------- */
+.ov.top { justify-content: flex-start; }
+.b-sub { margin: 0 0 4px; }
+.b-count { margin: 0 0 6px; font-weight: 700; color: #ffd36e; }
+.b-field { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+.balloon { position: absolute; left: 0; top: 0; width: 72px; height: 90px; pointer-events: auto; cursor: pointer;
+  border-radius: 50% 50% 48% 52% / 45% 45% 55% 55%;
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.75) 0 7%, transparent 22%), radial-gradient(circle at 50% 60%, var(--b), color-mix(in srgb, var(--b) 60%, #000));
+  box-shadow: inset -8px -10px 18px rgba(0,0,0,.2), 0 0 26px color-mix(in srgb, var(--b) 50%, transparent); }
+.balloon::before { content: ""; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%);
+  border: 6px solid transparent; border-bottom-color: var(--b); border-top: 0; }
+.balloon::after { content: ""; position: absolute; left: 50%; top: 100%; width: 1px; height: 70px; margin-top: 4px; background: rgba(255,255,255,.4); }
+.wish { position: absolute; transform: translate(-50%, -50%); font-size: 22px; font-weight: 800; white-space: nowrap;
+  text-shadow: 0 0 16px rgba(255,120,200,.9); animation: wishUp 1.6s ease-out forwards; pointer-events: none; }
+@keyframes wishUp { from { opacity: 0; transform: translate(-50%, -30%) scale(.6); } 20% { opacity: 1; transform: translate(-50%, -60%) scale(1.15); }
+  to { opacity: 0; transform: translate(-50%, -220%) scale(1); } }
+.b-got { position: fixed; left: 12px; right: 12px; bottom: calc(80px + env(safe-area-inset-bottom)); display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; z-index: 2; pointer-events: none; }
+.b-got span { padding: 5px 11px; border-radius: 999px; font-size: 13px; font-weight: 600; background: rgba(255,255,255,.08);
+  border: 1px solid; animation: chip .4s ease-out; }
+@keyframes chip { from { transform: scale(.5); opacity: 0; } }
+#bNext { position: fixed; bottom: calc(22px + env(safe-area-inset-bottom)); z-index: 3; }
+#bNext.ready { background: linear-gradient(135deg, #ff4fa3, #ffb347); animation: pulse 2s ease-in-out infinite; }
+
+/* ---------- Sirli qutilar ---------- */
+.boxes { display: flex; gap: 10px; justify-content: center; margin: 22px 0 26px; perspective: 900px; flex-wrap: wrap; }
+.mbox { width: min(26vw, 150px); height: min(38vw, 200px); cursor: pointer; animation: float 3s ease-in-out infinite; }
+.mbox:nth-child(2) { animation-delay: -1s; } .mbox:nth-child(3) { animation-delay: -2s; }
+@keyframes float { 50% { transform: translateY(-10px); } }
+.mb-in { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .8s cubic-bezier(.3,1.4,.5,1); }
+.mbox.open .mb-in { transform: rotateY(180deg); }
+.mb-f, .mb-b { position: absolute; inset: 0; border-radius: 18px; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; }
+.mb-f { background: linear-gradient(145deg, #3a1d6e, #1b0f3a); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 0 30px rgba(160,90,255,.4); }
+.mb-f b { font-size: min(11vw, 54px); filter: drop-shadow(0 0 14px rgba(255,120,200,.7)); }
+.mb-f span { font-size: 28px; font-weight: 900; color: #ffd36e; margin-top: 4px; }
+.mb-b { transform: rotateY(180deg); background: linear-gradient(145deg, #ff4fa3, #ffb347); font-weight: 700; font-size: min(3.6vw, 16px); line-height: 1.35;
+  box-shadow: 0 0 40px rgba(255,79,163,.6); }
+.mbox.open:not(.chosen) .mb-b { background: linear-gradient(145deg, #4a3a7a, #2a1f4f); box-shadow: none; opacity: .9; }
+.mbox.chosen { animation: none; transform: scale(1.08); }
+#boxNext { opacity: 0; pointer-events: none; transition: opacity .6s; }
+#boxNext.ready { opacity: 1; pointer-events: auto; }
+
+/* ---------- Ovozli xabar ---------- */
+.btn.voice { display: block; margin: 0 auto 12px; font-size: 15px; padding: 11px 22px;
+  background: linear-gradient(135deg, #7a5cff, #ff4fa3); animation: pulse 2s ease-in-out infinite; }
+.btn.voice[hidden] { display: none; }
+.btn.voice.playing { animation: none; background: rgba(255,255,255,.15); }

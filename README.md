@@ -43,6 +43,13 @@ U yerdagi `1.svg ... 6.svg` fayllari namuna, ularni o'chirib tashlasangiz bo'lad
 
 O'zgartirgandan keyin sahifani yangilang (F5). Serverni qayta ishga tushirish shart emas.
 
+### Qo'shimcha sozlamalar (`public/config.json`)
+- `yosh` — zarrachalardan yig'iladigan va shamlarda chiqadigan yosh (masalan `20`). Bo'sh qolsa oddiy shamlar.
+- `sana` — tug'ilgan kun sanasi (`2026-11-25` yoki `11-25`). Shu kungacha sayt "Hali erta" deb sanab turadi. Bo'sh qolsa kutish yo'q. Sinash uchun linkga `?test` qo'shing.
+- `ovozliTabrik` — ovozli xabar fayli (masalan `ovoz.mp3`, `public/` ichiga qo'ying). Oxirgi ekranda tugma chiqadi.
+- `tilaklar` — sharlar ichidagi tilaklar.
+- `sirliQutilar` — sirli qutilar ichidagi gaplar (3 ta).
+
 ## Internetga joylash (link qilib yuborish uchun)
 
 Eng osoni **Render.com** (bepul):
