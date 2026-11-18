@@ -4,9 +4,9 @@
   // ---------- Sozlamalar ----------
   const DEFAULT = {
     ism: 'Ismi',
-    kimdan: "Do'sting",
+    kimdan: "Akangiz",
     sozlar: [],
-    tabrik: "Tug'ilgan kuning muborak! 🎉",
+    tabrik: "Tug'ilgan kuningiz muborak! 🎉",
     asosiyRasm: '',
     rasmlar: [],
     musiqa: '',
@@ -14,7 +14,7 @@
     sana: '',
     ovozliTabrik: '',
     tilaklar: ["Sog'lik 💪", 'Omad 🍀', 'Baxt 😊', 'Kulgi 😄'],
-    sirliQutilar: ['Sen zo\'rsan! 🌟', 'Bugun hamma narsa sen uchun 🎉', 'Har doim shunday kulib yur 🌼'],
+    sirliQutilar: ['Siz zo\'rsiz! 🌟', 'Bugun hamma narsa siz uchun 🎉', 'Har doim shunday kulib yuring 🌼'],
   };
   let C = DEFAULT;
   try {
@@ -442,7 +442,7 @@
         explode(); await S(380);
       }
 
-      show(() => assign(textPoints('Bugun —\nsening kuning', mainBox()))); await S(2300);
+      show(() => assign(textPoints('Bugun —\nsizning kuningiz', mainBox()))); await S(2300);
       explode(); await S(500);
 
       if (C.yosh) {
@@ -484,7 +484,7 @@
       $('cakeScene').classList.remove('on');
 
       // Tabrik + salyut
-      show(() => assign(textPoints("Tug'ilgan\nkuning\nmuborak!", mainBox())));
+      show(() => assign(textPoints("Tug'ilgan\nkuningiz\nmuborak!", mainBox())));
       setTimeout(() => { shock(W / 2, H / 2, 300); sfx('boom'); buzz([60, 80, 60]); addConfetti(220); }, 900);
       for (let i = 0; i < 7; i++) setTimeout(randomLaunch, 700 + i * 300);
       await S(4200);
@@ -526,7 +526,7 @@
       });
       const candles = [...box.children];
       const hint = $('cakeHint'), lvl = $('micLvl');
-      hint.textContent = "Tilak tila va puflab o'chir 🌬️";
+      hint.textContent = "Tilak tilang va puflab o'chiring 🌬️";
       $('cakeScene').classList.add('on');
       duck(0.25);
       let finished = false, stream = null, raf = 0;
@@ -538,7 +538,7 @@
         c.classList.add('out'); sfx('tick'); buzz(20);
         if (candles.every((x) => x.classList.contains('out'))) {
           finished = true; stopMic(); duck(1);
-          hint.textContent = 'Tilaging albatta ushalsin! ✨';
+          hint.textContent = 'Tilagingiz albatta ushalsin! ✨';
           const r = box.getBoundingClientRect();
           setTimeout(() => { shock(r.left + r.width / 2, r.top + r.height / 2, 40); sfx('magic'); addConfetti(120); }, 300);
           setTimeout(done, 1800);
@@ -563,7 +563,7 @@
             actx.createMediaStreamSource(st).connect(an);
             const buf = new Float32Array(an.fftSize);
             let cnt = 0;
-            hint.textContent = "Tilak tila va telefonga puflab o'chir 🌬️";
+            hint.textContent = "Tilak tilang va telefonga puflab o'chiring 🌬️";
             $('micMeter').classList.add('on');
             const loop = () => {
               if (finished) return;
@@ -582,9 +582,9 @@
             };
             loop();
           })
-          .catch(() => { hint.textContent = "Tilak tila va shamlarni bosib o'chir 🕯️"; });
+          .catch(() => { hint.textContent = "Tilak tilang va shamlarni bosib o'chiring 🕯️"; });
       } else {
-        hint.textContent = "Tilak tila va shamlarni bosib o'chir 🕯️";
+        hint.textContent = "Tilak tilang va shamlarni bosib o'chiring 🕯️";
       }
     });
   }
@@ -630,7 +630,7 @@
         const chip = document.createElement('span'); chip.textContent = wishes[b.wi]; chip.style.borderColor = b.col; got.appendChild(chip);
         popped++; cnt();
         if (popped === wishes.length) {
-          $('bNext').classList.add('ready'); $('bNext').textContent = 'Hammasi seniki! Davom etish →';
+          $('bNext').classList.add('ready'); $('bNext').textContent = 'Hammasi sizniki! Davom etish →';
           shock(W / 2, H / 2, 140); sfx('magic'); addConfetti(100);
         }
       }
@@ -660,7 +660,7 @@
       wrap.innerHTML = '';
       const msgs = shuffle([...C.sirliQutilar]).slice(0, 3);
       $('boxNext').classList.remove('ready');
-      $('boxTitle').textContent = 'Bittasini tanla 🎁';
+      $('boxTitle').textContent = 'Bittasini tanlang 🎁';
       let chosen = false;
       msgs.forEach((m, i) => {
         const el = document.createElement('div');
