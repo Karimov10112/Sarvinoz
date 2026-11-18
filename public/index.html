@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#05030f">
+  <title>Tug'ilgan kuning muborak! 🎉</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="c"></canvas>
+
+  <!-- Boshlang'ich ekran -->
+  <div id="start" class="ov on">
+    <div class="gift">🎁</div>
+    <h1>Senga kichik sovg'a bor</h1>
+    <p class="muted">Ovozni yoqib qo'y 🔊</p>
+    <button id="startBtn" class="btn" disabled>Yuklanmoqda…</button>
+  </div>
+
+  <!-- Asosiy surat (zarrachalardan keyin paydo bo'ladi) -->
+  <img id="hero" alt="">
+
+  <!-- 3D galereya -->
+  <div id="gallery" class="ov">
+    <h2 class="g-title">Xotiralar ✨</h2>
+    <div class="stage" id="stage"><div class="ring" id="ring"></div></div>
+    <p class="muted g-hint">Surib aylantir · bosib kattalashtir</p>
+    <button id="gNext" class="btn">Davom etish →</button>
+  </div>
+
+  <!-- Kattalashtirilgan surat -->
+  <div id="lb" class="lb">
+    <figure><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
+  </div>
+
+  <!-- Yakuniy tabrik kartochkasi -->
+  <div id="card" class="card">
+    <p id="msg" class="msg"></p>
+    <p id="sign" class="sign"></p>
+    <div class="row">
+      <button id="fwBtn" class="btn small">🎆 Salyut</button>
+      <button id="againBtn" class="btn small ghost">↻ Qaytadan</button>
+    </div>
+  </div>
+  <p id="tapHint" class="tap-hint">Ekranning istalgan joyini bos 🎆</p>
+
+  <script src="app.js"></script>
+</body>
+</html>

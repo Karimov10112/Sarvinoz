@@ -1,0 +1,15 @@
+{
+  "ism": "Malika",
+  "kimdan": "Do'sting",
+  "sozlar": ["Aqlli", "Faol", "Notiq", "Ilhomlantiruvchi"],
+  "tabrik": "Bugun sening kuning! Aqling, g'ayrating va so'zlaring bilan atrofingdagilarni doim ilhomlantirasan. Yangi yoshing yangi g'alabalar, katta sahnalar va unutilmas kunlar olib kelsin. Har doim shunday yorqin va faol bo'l! 🎉",
+  "asosiyRasm": "photos/1.svg",
+  "rasmlar": [
+    { "fayl": "photos/2.svg", "izoh": "Birinchi xotira ✨" },
+    { "fayl": "photos/3.svg", "izoh": "O'sha kulgili kun 😂" },
+    { "fayl": "photos/4.svg", "izoh": "Sahnadagi yulduz 🎤" },
+    { "fayl": "photos/5.svg", "izoh": "Eng yaxshi lahza 💫" },
+    { "fayl": "photos/6.svg", "izoh": "Yana ko'p xotiralar oldinda 🚀" }
+  ],
+  "musiqa": ""
+}
