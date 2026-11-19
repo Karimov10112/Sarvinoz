@@ -33,7 +33,7 @@
   let W = 0, H = 0, N = 0;
   let mode = 'text';          // 'text' | 'photo'
   let current = null;         // joriy shaklni qayta chizish funksiyasi (ekran o'lchami o'zgarsa)
-  let finalMode = false;
+  let finalMode = false, petalRain = false;
   let runId = 0;
 
   // ---------- Rasmlarni oldindan yuklash ----------
@@ -245,6 +245,25 @@
       daisy: Math.random() < 0.3,
     });
   }
+  // Atirgul gulbarglari
+  const PCOLS = ['#b3001b', '#c8102e', '#e0234e', '#f25c7a', '#ff9ab3', '#ffd1dc'];
+  function addPetals(n, at) {
+    for (let i = 0; i < n; i++) {
+      const p = {
+        x: Math.random() * W, y: -20 - Math.random() * H * 0.5,
+        vx: (Math.random() - 0.5) * 1.2, vy: 0.8 + Math.random() * 0.9,
+        w: 6 + Math.random() * 6, h: 0, r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.06,
+        sw: Math.random() * 6.28, c: PCOLS[(Math.random() * PCOLS.length) | 0],
+        petal: Math.random() > 0.15, daisy: false,
+      };
+      p.daisy = !p.petal; p.fall = p.vy;
+      if (at) {
+        const a = Math.random() * 6.28, f = 2 + Math.random() * 6;
+        p.x = at.x; p.y = at.y; p.vx = Math.cos(a) * f; p.vy = Math.sin(a) * f - 2;
+      }
+      confetti.push(p);
+    }
+  }
   function drawFx() {
     ctx.globalCompositeOperation = 'lighter';
     for (let i = waves.length - 1; i >= 0; i--) {
@@ -263,10 +282,21 @@
     ctx.globalCompositeOperation = 'source-over';
     for (let i = confetti.length - 1; i >= 0; i--) {
       const c = confetti[i];
-      c.sw += 0.05; c.x += c.vx + Math.sin(c.sw) * 0.8; c.y += c.vy; c.r += c.vr;
+      if (c.fall !== undefined) { c.vy += (c.fall - c.vy) * 0.04; c.vx *= 0.97; }
+      c.sw += c.petal ? 0.03 : 0.05; c.x += c.vx + Math.sin(c.sw) * (c.petal ? 1.1 : 0.8); c.y += c.vy; c.r += c.vr;
       if (c.y > H + 30) { confetti.splice(i, 1); continue; }
       ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.r);
-      if (c.daisy) {
+      if (c.petal) {
+        const w = c.w, h = c.w * 1.25;
+        ctx.scale(1, 0.35 + 0.65 * Math.abs(Math.cos(c.sw * 1.6)));
+        ctx.fillStyle = c.c;
+        ctx.beginPath(); ctx.moveTo(0, -h);
+        ctx.bezierCurveTo(w, -h * 0.7, w * 0.85, h * 0.9, 0, h);
+        ctx.bezierCurveTo(-w * 0.85, h * 0.9, -w, -h * 0.7, 0, -h); ctx.fill();
+        ctx.globalAlpha = 0.25; ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.ellipse(-w * 0.25, -h * 0.25, w * 0.25, h * 0.4, 0.3, 0, 6.29); ctx.fill();
+        ctx.globalAlpha = 1;
+      } else if (c.daisy) {
         // Romashka gulchasi 🌼
         const r = c.w * 0.9;
         ctx.fillStyle = '#fff';
@@ -378,7 +408,7 @@
     ctx.globalCompositeOperation = 'lighter';
     drawFireworks();
     drawFx();
-    if (finalMode && confetti.length < 40 && Math.random() < 0.12) addConfetti(1);
+    if ((finalMode || petalRain) && confetti.length < 55 && Math.random() < 0.16) addPetals(1);
     requestAnimationFrame(frame);
   }
 
@@ -447,7 +477,8 @@
   function resetUI() {
     finalMode = false;
     clearInterval(fwTimer); clearTimeout(typeTimer);
-    ['card', 'tapHint', 'gallery', 'lb', 'cakeScene', 'balloonScene', 'boxScene'].forEach((id) => $(id).classList.remove('on'));
+    ['card', 'tapHint', 'gallery', 'lb', 'cakeScene', 'balloonScene', 'boxScene', 'bouquetScene', 'letter'].forEach((id) => $(id).classList.remove('on'));
+    petalRain = false;
     sceneCleanup.forEach((f) => f()); sceneCleanup = [];
     stopVoice();
     $('sign').classList.remove('on');
@@ -525,12 +556,17 @@
       // Sirli qutilar
       if ((C.sirliQutilar || []).length) { await boxScene(); await S(0); $('boxScene').classList.remove('on'); await S(700); }
 
-      // Yakun
+      // Atirgul buketi
+      await bouquetScene(); await S(0);
+      $('bouquetScene').classList.remove('on'); await S(900);
+
+      // Yakun: muhrli maktub
       finalMode = true;
       txtTarget = 1;
       show(() => { const r = textPoints(C.ism, { cx: W / 2, cy: H * 0.17, maxW: W * 0.85, maxH: H * 0.2 }, 'script'); assign(r); placeTitle(r); });
-      fwTimer = setInterval(randomLaunch, 1600);
       await S(1700); titleOn();
+      await letterScene(); await S(0);
+      fwTimer = setInterval(randomLaunch, 1800);
       $('card').classList.add('on'); $('tapHint').classList.add('on');
       $('voiceBtn').hidden = !C.ovozliTabrik;
       typeText(C.tabrik, id);
@@ -838,6 +874,119 @@
     });
   }
 
+  // ---------- Atirgul buketi ----------
+  const ROSE = {
+    red: ['#4a000e', '#a8102a', '#e8304f'],
+    pink: ['#8c2350', '#e5668e', '#ffc3d3'],
+    cream: ['#a77c55', '#efd6b8', '#fff8ee'],
+  };
+  function petalPath(R) {
+    return `M0,0 C${-0.8 * R},${-0.18 * R} ${-0.82 * R},${-0.98 * R} 0,${-R} C${0.82 * R},${-0.98 * R} ${0.8 * R},${-0.18 * R} 0,0Z`;
+  }
+  function roseSVG(r, col, delay) {
+    const layers = [[6, 1, 0], [5, 0.74, 22], [4, 0.52, 48], [3, 0.32, 12]];
+    let g = `<g class="rose" style="animation-delay:${delay}s">`;
+    layers.forEach(([n, sc, off], li) => {
+      g += `<g class="rl" style="animation-delay:${(delay + 0.12 + li * 0.12).toFixed(2)}s">`;
+      for (let k = 0; k < n; k++) g += `<path d="${petalPath(r * sc)}" transform="rotate(${off + (k * 360) / n})" fill="url(#rg-${col})" stroke="${ROSE[col][0]}" stroke-opacity=".35" stroke-width=".7"/>`;
+      g += '</g>';
+    });
+    g += `<circle r="${(r * 0.12).toFixed(1)}" fill="${ROSE[col][0]}" opacity=".85"/></g>`;
+    return g;
+  }
+  function buildBouquet() {
+    const roses = [
+      [150, 92, 30, 'red'], [103, 112, 27, 'pink'], [197, 112, 27, 'red'],
+      [76, 156, 24, 'red'], [224, 156, 24, 'pink'], [126, 148, 29, 'red'], [174, 148, 29, 'cream'],
+      [150, 186, 26, 'red'], [102, 192, 23, 'cream'], [198, 192, 23, 'red'],
+    ];
+    let defs = '<defs>';
+    for (const [k, c] of Object.entries(ROSE))
+      defs += `<linearGradient id="rg-${k}" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0" stop-color="${c[0]}"/><stop offset=".55" stop-color="${c[1]}"/><stop offset="1" stop-color="${c[2]}"/></linearGradient>`;
+    defs += `<linearGradient id="wb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6e6dc"/><stop offset="1" stop-color="#dcbcae"/></linearGradient>
+      <linearGradient id="wf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1ec"/><stop offset=".5" stop-color="#f3cfc6"/><stop offset="1" stop-color="#d9a79c"/></linearGradient>
+      <linearGradient id="lf" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0" stop-color="#1f4d2a"/><stop offset="1" stop-color="#6aa65a"/></linearGradient>
+      <linearGradient id="gd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff2c9"/><stop offset=".5" stop-color="#e2b25e"/><stop offset="1" stop-color="#a8722c"/></linearGradient></defs>`;
+    let out = defs;
+    out += `<path class="bq-in" style="animation-delay:.1s" d="M38,150 Q150,118 262,150 L158,402 L142,402 Z" fill="url(#wb)"/>`;
+    // Barglar
+    const leaves = [[58, 128, -55], [242, 128, 55], [48, 190, -80], [252, 190, 80], [150, 52, 0], [88, 78, -25], [212, 78, 25]];
+    leaves.forEach(([x, y, a], i) => {
+      out += `<g transform="translate(${x},${y}) rotate(${a})"><g class="bq-pop" style="animation-delay:${(0.5 + i * 0.08).toFixed(2)}s">
+        <path d="M0,10 C12,-2 12,-26 0,-42 C-12,-26 -12,-2 0,10Z" fill="url(#lf)"/><path d="M0,8 L0,-38" stroke="#bfe3a8" stroke-opacity=".5" stroke-width="1"/></g></g>`;
+    });
+    // Poyalar
+    roses.forEach(([x, y], i) => {
+      const bx = 150 + (x - 150) * 0.12;
+      out += `<path class="stem" pathLength="1" style="animation-delay:${(0.35 + i * 0.05).toFixed(2)}s" d="M${bx},335 Q${(x + bx) / 2},${(y + 335) / 2 + 20} ${x},${y}" stroke="#3b7a40" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    });
+    // Mayda oq gullar
+    for (let i = 0; i < 34; i++) {
+      const a = Math.random() * Math.PI, rr = 95 + Math.random() * 30;
+      const x = 150 + Math.cos(a) * rr * 1.05, y = 160 - Math.sin(a) * rr * 0.95;
+      out += `<circle class="bb" style="animation-delay:${(2 + Math.random() * 1.2).toFixed(2)}s" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(1.8 + Math.random() * 2).toFixed(1)}" fill="#fff"/>`;
+    }
+    // Atirgullar (pastdagilari ustda)
+    roses.slice().sort((a, b) => a[1] - b[1]).forEach(([x, y, r, c]) => {
+      const i = roses.findIndex((q) => q[0] === x && q[1] === y);
+      out += `<g transform="translate(${x},${y})">${roseSVG(r, c, +(1.1 + i * 0.2).toFixed(2))}</g>`;
+    });
+    // Old o'ram va lenta
+    out += `<path class="bq-in" style="animation-delay:.2s" d="M28,208 C95,246 205,246 272,208 L162,404 L138,404 Z" fill="url(#wf)"/>
+      <path class="bq-in" style="animation-delay:.2s" d="M28,208 C95,246 205,246 272,208" stroke="url(#gd)" stroke-width="2.5" fill="none"/>
+      <path class="bq-in" style="animation-delay:.2s" d="M150,243 L150,402 M110,240 L146,402 M190,240 L154,402" stroke="#000" stroke-opacity=".06" stroke-width="1.5"/>
+      <g transform="translate(150,320)"><g class="bq-pop" style="animation-delay:3.1s">
+        <path d="M-2,4 L-26,52 L-16,50 L-10,58 L4,8Z M2,4 L26,52 L16,50 L10,58 L-4,8Z" fill="url(#gd)"/>
+        <ellipse cx="-22" cy="-6" rx="24" ry="12" transform="rotate(-24 -22 -6)" fill="none" stroke="url(#gd)" stroke-width="8"/>
+        <ellipse cx="22" cy="-6" rx="24" ry="12" transform="rotate(24 22 -6)" fill="none" stroke="url(#gd)" stroke-width="8"/>
+        <circle r="8" fill="url(#gd)"/></g></g>`;
+    return { svg: out, count: roses.length };
+  }
+  function bouquetScene() {
+    return new Promise((done) => {
+      const sc = $('bouquetScene'), holder = $('bouquet');
+      const b = buildBouquet();
+      holder.innerHTML = `<svg viewBox="0 0 300 410" aria-label="Atirgul buketi">${b.svg}</svg>`;
+      $('bqTitle').classList.remove('on'); $('bqNext').classList.remove('ready');
+      sc.classList.add('on');
+      const ts = [];
+      const later = (fn, ms) => ts.push(setTimeout(fn, ms));
+      sceneCleanup.push(() => { ts.forEach(clearTimeout); petalRain = false; });
+      // Har bir gul ochilganda yengil nota
+      const notes = [72, 74, 76, 79, 81, 84, 81, 79, 76, 84];
+      for (let i = 0; i < b.count; i++) later(() => actx && musicOn && bell(actx.currentTime, NOTE(notes[i] + 12), 1.4, 0.07), (1.15 + i * 0.2) * 1000);
+      later(() => { $('bqTitle').classList.add('on'); sfx('magic'); petalRain = true; addPetals(25); }, 3600);
+      later(() => $('bqNext').classList.add('ready'), 5600);
+      holder.onclick = (e) => {
+        e.stopPropagation();
+        const r = holder.getBoundingClientRect();
+        addPetals(26, { x: r.left + r.width / 2, y: r.top + r.height * 0.35 });
+        sfx('magic'); buzz(20);
+        holder.classList.remove('sway'); void holder.offsetWidth; holder.classList.add('sway');
+      };
+      $('bqNext').onclick = () => { ts.forEach(clearTimeout); petalRain = false; done(); };
+    });
+  }
+
+  // ---------- Muhrli maktub ----------
+  function letterScene() {
+    return new Promise((done) => {
+      const L = $('letter'), env = L.querySelector('.env'), seal = $('seal');
+      env.classList.remove('open', 'out'); seal.classList.remove('broken');
+      seal.textContent = (C.ism || 'S').trim()[0] || 'S';
+      L.classList.add('on');
+      let opened = false;
+      seal.onclick = (e) => {
+        e.stopPropagation();
+        if (opened) return; opened = true;
+        seal.classList.add('broken'); sfx('tick'); buzz(25);
+        setTimeout(() => { env.classList.add('open'); sfx('magic'); }, 350);
+        setTimeout(() => env.classList.add('rise'), 1100);
+        setTimeout(() => { L.classList.remove('on'); addPetals(30); done(); }, 2300);
+      };
+    });
+  }
+
   // ---------- 2. Ovozli tabrik ----------
   let voice = null;
   function stopVoice() { if (voice) { voice.pause(); voice = null; duck(1); $('voiceBtn').classList.remove('playing'); } }
@@ -864,7 +1013,7 @@
 
   // Yakuniy ekranda bosilgan joyda salyut
   addEventListener('pointerdown', (e) => {
-    if (!finalMode || e.target.closest('.card')) return;
+    if (!finalMode || e.target.closest('.card') || e.target.closest('.letter')) return;
     launch(e.clientX, e.clientY);
   });
   $('fwBtn').addEventListener('click', () => { for (let i = 0; i < 6; i++) setTimeout(randomLaunch, i * 180); });
