@@ -27,6 +27,9 @@
   }
 
   const $ = (id) => document.getElementById(id);
+  // Yakun rejimida sovg'a qutisi umuman ko'rsatilmaydi — to'g'ridan-to'g'ri yakun sahifasi ochiladi
+  const memMode = !!C.xotira && !/[?&]tabrik\b/.test(location.search);
+  if (!memMode) $('start').classList.add('on');
   const FONT = '"Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif';
   const cv = $('c');
   const ctx = cv.getContext('2d');
@@ -1160,7 +1163,7 @@
     addConfetti(150);
   }
 
-  if (document.fonts && document.fonts.load) {
+  if (!memMode && document.fonts && document.fonts.load) {
     await Promise.race([
       Promise.all([
         document.fonts.load("40px 'Great Vibes'"),
@@ -1291,5 +1294,5 @@
     showMemory();
   });
 
-  if (C.xotira && !/[?&]tabrik\b/.test(location.search)) showMemory();
+  if (memMode) showMemory();
 })();
