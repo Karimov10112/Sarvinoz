@@ -423,3 +423,21 @@ h1 { font-size: clamp(26px, 6vw, 44px); margin: 12px 0 6px; font-weight: 800; }
   color: #f6dca0; text-shadow: 0 0 14px rgba(255,200,120,.25); }
 .m-tg { display: inline-block; text-decoration: none; }
 .m-fin { margin: 6px 0 0; font: 400 34px 'Great Vibes', cursive; color: #e9c27a; text-shadow: 0 0 16px rgba(255,200,120,.35); }
+
+/* ---------- Yakun: hisoblagich, aylanuvchi titrlar ---------- */
+.m-wrap { gap: 30px; }
+.m-life-t { margin: 0 0 14px; font: italic 500 16px 'Playfair Display', Georgia, serif; color: rgba(246,220,160,.8); }
+.m-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.m-stats div { flex: 1 1 28%; min-width: 92px; padding: 12px 8px 10px; border-radius: 16px; background: rgba(255,255,255,.04);
+  box-shadow: inset 0 0 0 1px rgba(246,220,160,.3), 0 0 30px rgba(226,178,94,.08); }
+.m-stats div.wide { flex-basis: 100%; }
+.m-stats b { display: block; font: 500 24px 'Playfair Display', Georgia, serif; font-variant-numeric: tabular-nums; color: #fff3d6;
+  text-shadow: 0 0 14px rgba(255,205,130,.35); }
+.m-stats .wide b { font-size: 30px; letter-spacing: .02em; }
+.m-stats span { font-size: 11px; letter-spacing: .25em; text-transform: uppercase; color: rgba(246,220,160,.55); }
+.m-roll { position: relative; height: 172px; overflow: hidden;
+  -webkit-mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent); mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent); }
+.m-roll .m-credits { gap: 0; animation: roll 26s linear infinite; }
+.m-roll .m-cr { opacity: 1; transform: none; height: 58px; justify-content: center; }
+@keyframes roll { to { transform: translateY(-50%); } }
+.m-hint { margin: -6px 0 0; font-size: 12.5px; color: rgba(246,220,160,.5); }

@@ -206,6 +206,29 @@
       sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1, h: h + Math.random() * 40 - 20 });
     }
   }
+  // ---------- Uchar yulduzlar ----------
+  const meteors = [];
+  let meteorSky = false;
+  function meteor(x, y) {
+    const sp = 9 + Math.random() * 5, a = Math.PI * (0.72 + Math.random() * 0.08);
+    if (x === undefined) { x = W * (0.3 + Math.random() * 0.8); y = -20 + Math.random() * H * 0.3; }
+    meteors.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, len: 90 + Math.random() * 70 });
+  }
+  function drawMeteors() {
+    if (meteorSky && Math.random() < 0.006) meteor();
+    for (let i = meteors.length - 1; i >= 0; i--) {
+      const m = meteors[i];
+      m.x += m.vx; m.y += m.vy; m.life -= 0.012;
+      if (m.life <= 0 || m.y > H + 50 || m.x < -200) { meteors.splice(i, 1); continue; }
+      const sp = Math.hypot(m.vx, m.vy), tx = m.x - (m.vx / sp) * m.len, ty = m.y - (m.vy / sp) * m.len;
+      const g = ctx.createLinearGradient(m.x, m.y, tx, ty);
+      g.addColorStop(0, `rgba(255,248,225,${m.life.toFixed(2)})`); g.addColorStop(0.3, `rgba(246,214,140,${(m.life * 0.5).toFixed(2)})`); g.addColorStop(1, 'rgba(246,214,140,0)');
+      ctx.strokeStyle = g; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tx, ty); ctx.stroke();
+      ctx.fillStyle = `rgba(255,255,255,${m.life.toFixed(2)})`;
+      ctx.beginPath(); ctx.arc(m.x, m.y, 2, 0, 6.29); ctx.fill();
+    }
+  }
   function drawFireworks() {
     for (let i = rockets.length - 1; i >= 0; i--) {
       const r = rockets[i];
@@ -407,8 +430,9 @@
     }
     ctx.globalCompositeOperation = 'lighter';
     drawFireworks();
+    drawMeteors();
     drawFx();
-    if ((finalMode || petalRain) && confetti.length < 55 && Math.random() < 0.16) addPetals(1);
+    if ((finalMode || petalRain) && confetti.length < (meteorSky ? 22 : 55) && Math.random() < (meteorSky ? 0.06 : 0.16)) addPetals(1);
     requestAnimationFrame(frame);
   }
 
@@ -1205,15 +1229,28 @@
       ['Xotiralar', `${gImgs.length} ta surat`],
       ['Tilaklar', 'cheksiz ✨'],
     ];
+    // Ikki marta qo'yamiz — titrlar uzluksiz aylanadi
     const cr = $('mCredits');
-    credits.forEach(([k, v], i) => {
+    [0, 1].forEach(() => credits.forEach(([k, v]) => {
       const row = document.createElement('div');
       row.className = 'm-cr';
-      row.style.transitionDelay = (0.4 + i * 0.35).toFixed(2) + 's';
       row.innerHTML = '<span></span><b></b>';
       row.firstChild.textContent = k; row.lastChild.textContent = v;
       cr.appendChild(row);
-    });
+    }));
+
+    // Hayot hisoblagichi: tug'ilgan paytdan beri
+    if (bday && C.yosh) {
+      const birth = new Date(bday.getFullYear() - +C.yosh, bday.getMonth(), bday.getDate());
+      const fmt = (n) => n.toLocaleString('ru-RU');
+      const tick = () => {
+        const ms = Date.now() - birth.getTime();
+        $('lcD').textContent = fmt(Math.floor(ms / 864e5));
+        $('lcH').textContent = fmt(Math.floor(ms / 36e5));
+        $('lcS').textContent = fmt(Math.floor(ms / 1e3));
+      };
+      tick(); setInterval(tick, 1000);
+    } else $('mLife').hidden = true;
     $('mClosing').textContent = C.yakunMatni || '';
     const tg = String(C.telegram || '').replace(/^@|^https?:\/\/t\.me\//, '');
     if (tg) { $('mTg').href = 'https://t.me/' + tg; $('mTg').textContent = `💬 ${C.kimdan}ga javob yozish`; } else $('mTg').hidden = true;
@@ -1230,12 +1267,19 @@
     $('start').classList.remove('on'); $('wait').classList.remove('on');
     memory.classList.add('on'); memory.scrollTop = 0;
     muteBtn.classList.add('on');
-    petalRain = true;
+    petalRain = true; meteorSky = true;
+    setTimeout(() => meteor(), 1800);
   }
   memory.addEventListener('pointerdown', startMusic);
+  // Osmonga tegilsa — uchar yulduz
+  memory.addEventListener('click', (e) => {
+    if (e.target.closest('a, button')) return;
+    meteor(e.clientX + 140, e.clientY - 140);
+    if (actx && musicOn) [84, 88, 91].forEach((n, i) => bell(actx.currentTime + i * 0.07, NOTE(n), 1.2, 0.06));
+  });
   $('mReplay').addEventListener('click', (e) => {
     e.stopPropagation();
-    memory.classList.remove('on'); petalRain = false;
+    memory.classList.remove('on'); petalRain = false; meteorSky = false;
     startMusic();
     current = null; dissolve();
     setTimeout(run, 600);
