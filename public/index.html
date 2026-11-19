@@ -59,6 +59,39 @@
     <button id="gNext" class="btn">Davom etish →</button>
   </div>
 
+  <!-- Xotira sahifasi: hammasi bitta sahifada -->
+  <div id="memory" class="memory">
+    <div class="m-wrap">
+      <header class="m-head m-sec">
+        <p class="m-kicker">Tug'ilgan kun</p>
+        <h1 id="mName" class="m-name"></h1>
+        <p id="mDate" class="m-date"></p>
+        <p id="mStatus" class="m-status"></p>
+      </header>
+      <figure id="mHeroBox" class="m-hero m-sec"><img id="mHero" alt=""></figure>
+      <section class="m-sec">
+        <h2 class="m-h">Xotiralar</h2>
+        <div id="mStrip" class="m-strip"></div>
+      </section>
+      <section class="m-sec">
+        <h2 class="m-h">Bu gullar — siz uchun</h2>
+        <div id="mBouquet" class="bouquet m-bouquet"></div>
+      </section>
+      <section class="m-sec">
+        <h2 class="m-h">Maktub</h2>
+        <div class="m-letter"><p id="mMsg"></p><p id="mSign" class="m-sign"></p></div>
+      </section>
+      <section class="m-sec">
+        <h2 class="m-h">Tilaklar</h2>
+        <div id="mWishes" class="m-wishes"></div>
+      </section>
+      <section class="m-sec m-end">
+        <button id="mReplay" class="btn">▶ Tabrikni qaytadan ko'rish</button>
+        <p id="mFoot" class="m-foot"></p>
+      </section>
+    </div>
+  </div>
+
   <!-- Kattalashtirilgan surat -->
   <div id="lb" class="lb">
     <figure><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
@@ -125,6 +158,7 @@
     <div class="row">
       <button id="fwBtn" class="btn small">🎆 Salyut</button>
       <button id="againBtn" class="btn small ghost">↻ Qaytadan</button>
+      <button id="homeBtn" class="btn small ghost" hidden>🏠 Sahifaga</button>
     </div>
   </div>
   <p id="tapHint" class="tap-hint">Ekranning istalgan joyini bosing 🎆</p>

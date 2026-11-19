@@ -1116,7 +1116,7 @@
   }
   const bday = birthdayStart();
   const bypass = /[?&](ochish|test)\b/.test(location.search);
-  if (bday && Date.now() < bday.getTime() && !bypass) {
+  if (bday && Date.now() < bday.getTime() && !bypass && !C.xotira) {
     $('start').classList.remove('on');
     $('wait').classList.add('on');
     $('waitName').textContent = `Hali erta, ${C.ism} 🤫`;
@@ -1149,11 +1149,15 @@
 
   const btn = $('startBtn');
   btn.disabled = false; btn.textContent = 'Ochish ✨';
-  let opened = false;
-  btn.addEventListener('click', async () => {
-    if (opened) return; opened = true;
+  let opened = false, musicStarted = false;
+  const startMusic = () => {
+    if (musicStarted) return; musicStarted = true;
     initAudio(); if (actx && actx.resume) actx.resume();
     if (audio) audio.play().catch(() => {}); else playSong();
+  };
+  btn.addEventListener('click', async () => {
+    if (opened) return; opened = true;
+    startMusic();
     $('start').classList.add('opening');
     buzz(30);
     const g = $('gift').getBoundingClientRect();
@@ -1164,4 +1168,86 @@
     setTimeout(() => { $('start').classList.remove('on'); muteBtn.classList.add('on'); }, 900);
     setTimeout(run, 1500);
   });
+
+  // ================= Xotira sahifasi (hammasi bitta sahifada) =================
+  const MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
+  const memory = $('memory');
+  let memoryBuilt = false;
+  function buildMemory() {
+    if (memoryBuilt) return; memoryBuilt = true;
+    $('mName').textContent = C.ism;
+    const parts2 = [];
+    if (C.yosh) parts2.push(`${C.yosh} yosh`);
+    if (bday) parts2.push(`${bday.getDate()}-${MONTHS[bday.getMonth()]}, ${bday.getFullYear()}`);
+    $('mDate').textContent = parts2.join(' · ');
+    const st = $('mStatus');
+    if (bday) {
+      const now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      if (today.getMonth() === bday.getMonth() && today.getDate() === bday.getDate()) {
+        st.textContent = 'Bugun sizning kuningiz 🎉';
+      } else {
+        let next = new Date(today.getFullYear(), bday.getMonth(), bday.getDate());
+        if (next <= today) next = new Date(today.getFullYear() + 1, bday.getMonth(), bday.getDate());
+        const days = Math.round((next - today) / 864e5);
+        st.textContent = `Keyingi tug'ilgan kuningizgacha: ${days} kun ⏳`;
+      }
+    } else st.hidden = true;
+    if (mainImg) $('mHero').src = mainImg.src; else $('mHeroBox').hidden = true;
+
+    const strip = $('mStrip');
+    gImgs.forEach((g) => {
+      const f = document.createElement('figure');
+      f.innerHTML = `<img src="${g.img.src}" alt="" loading="lazy"><figcaption></figcaption>`;
+      f.querySelector('figcaption').textContent = g.izoh;
+      f.addEventListener('click', () => openLb(g));
+      strip.appendChild(f);
+    });
+    if (!gImgs.length) strip.parentNode.hidden = true;
+
+    $('mMsg').textContent = C.tabrik;
+    $('mSign').textContent = '— ' + C.kimdan;
+    const wl = $('mWishes');
+    (C.tilaklar || []).forEach((w) => { const sp = document.createElement('span'); sp.textContent = w; wl.appendChild(sp); });
+    if (!(C.tilaklar || []).length) wl.parentNode.hidden = true;
+    $('mFoot').textContent = `${C.kimdan} tomonidan, chin qalbdan 🤍`;
+
+    // Bo'limlar ko'ringanda sekin paydo bo'ladi; buket ko'ringanda "o'sadi"
+    const bq = $('mBouquet');
+    const io = new IntersectionObserver((ents) => ents.forEach((en) => {
+      if (!en.isIntersecting) return;
+      en.target.classList.add('vis');
+      if (en.target.contains(bq) && !bq.innerHTML) bq.innerHTML = `<svg viewBox="0 0 300 410" aria-label="Atirgul buketi">${buildBouquet().svg}</svg>`;
+      io.unobserve(en.target);
+    }), { root: memory, threshold: 0.2 });
+    memory.querySelectorAll('.m-sec').forEach((el) => io.observe(el));
+    bq.addEventListener('click', () => {
+      const r = bq.getBoundingClientRect();
+      addPetals(22, { x: r.left + r.width / 2, y: r.top + r.height * 0.35 });
+      sfx('magic'); buzz(20);
+      bq.classList.remove('sway'); void bq.offsetWidth; bq.classList.add('sway');
+    });
+  }
+  function showMemory() {
+    buildMemory();
+    $('start').classList.remove('on'); $('wait').classList.remove('on');
+    memory.classList.add('on'); memory.scrollTop = 0;
+    muteBtn.classList.add('on');
+    petalRain = true;
+  }
+  memory.addEventListener('pointerdown', startMusic);
+  $('mReplay').addEventListener('click', (e) => {
+    e.stopPropagation();
+    memory.classList.remove('on'); petalRain = false;
+    startMusic();
+    current = null; dissolve();
+    setTimeout(run, 600);
+  });
+  $('homeBtn').hidden = !C.xotira;
+  $('homeBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    runId++; resetUI(); current = null; dissolve();
+    showMemory();
+  });
+
+  if (C.xotira && !/[?&]tabrik\b/.test(location.search)) showMemory();
 })();
