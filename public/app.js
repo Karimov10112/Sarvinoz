@@ -479,6 +479,8 @@
     clearInterval(fwTimer); clearTimeout(typeTimer);
     ['card', 'tapHint', 'gallery', 'lb', 'cakeScene', 'balloonScene', 'boxScene', 'bouquetScene', 'letter'].forEach((id) => $(id).classList.remove('on'));
     petalRain = false;
+    $('card').classList.remove('writing'); $('card').style.transition = ''; $('card').style.transform = '';
+    $('shards').innerHTML = '';
     sceneCleanup.forEach((f) => f()); sceneCleanup = [];
     stopVoice();
     $('sign').classList.remove('on');
@@ -565,9 +567,9 @@
       txtTarget = 1;
       show(() => { const r = textPoints(C.ism, { cx: W / 2, cy: H * 0.17, maxW: W * 0.85, maxH: H * 0.2 }, 'script'); assign(r); placeTitle(r); });
       await S(1700); titleOn();
-      await letterScene(); await S(0);
+      await letterScene(); await S(300);
       fwTimer = setInterval(randomLaunch, 1800);
-      $('card').classList.add('on'); $('tapHint').classList.add('on');
+      $('tapHint').classList.add('on');
       $('voiceBtn').hidden = !C.ovozliTabrik;
       typeText(C.tabrik, id);
     } catch (e) {
@@ -972,7 +974,8 @@
   function letterScene() {
     return new Promise((done) => {
       const L = $('letter'), env = L.querySelector('.env'), seal = $('seal');
-      env.classList.remove('open', 'out'); seal.classList.remove('broken');
+      const paper = L.querySelector('.env-paper'), card = $('card');
+      env.classList.remove('open', 'rise', 'gone'); seal.classList.remove('broken');
       seal.textContent = (C.ism || 'S').trim()[0] || 'S';
       L.classList.add('on');
       let opened = false;
@@ -982,9 +985,62 @@
         seal.classList.add('broken'); sfx('tick'); buzz(25);
         setTimeout(() => { env.classList.add('open'); sfx('magic'); }, 350);
         setTimeout(() => env.classList.add('rise'), 1100);
-        setTimeout(() => { L.classList.remove('on'); addPetals(30); done(); }, 2300);
+        setTimeout(() => {
+          // 1) Qog'oz o'rnida haqiqiy maktub paydo bo'ladi
+          const from = paper.getBoundingClientRect();
+          // 2) Konvert parchalanib sochiladi
+          shatter(env);
+          env.classList.add('gone');
+          $('msg').textContent = ''; $('sign').classList.remove('on');
+          card.classList.add('writing');
+          card.style.transition = 'none'; card.style.transform = 'none';
+          card.classList.add('on');
+          const to = card.getBoundingClientRect();
+          card.style.transform = `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${from.width / to.width}, ${from.height / to.height})`;
+          void card.offsetWidth;
+          card.style.transition = 'transform 1.3s cubic-bezier(.3,.9,.3,1), box-shadow 1.3s';
+          card.style.transform = 'none';
+          sfx('pop'); buzz([20, 40, 20]);
+          setTimeout(() => { L.classList.remove('on'); done(); }, 1350);
+        }, 2000);
       };
     });
+  }
+
+  // Konvertni parchalarga bo'lib sochish
+  function shatter(env) {
+    const r = env.getBoundingClientRect();
+    const layer = $('shards'); layer.innerHTML = '';
+    const COLS = 5, ROWS = 3, cw = r.width / COLS, ch = r.height / ROWS;
+    const fills = ['linear-gradient(170deg,#f7e4db,#e6c1b6)', 'linear-gradient(160deg,#f4ddd3,#d9b1a6)', 'linear-gradient(180deg,#f1d3c8,#ddb3a7)'];
+    for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
+      // Har bir katakni ikki uchburchakka bo'lamiz, uchlarini biroz qiyshaytiramiz
+      const j = () => (Math.random() - 0.5) * 0.35;
+      const tris = Math.random() < 0.5
+        ? [[[0, 0], [1, 0], [0, 1]], [[1, 0], [1, 1], [0, 1]]]
+        : [[[0, 0], [1, 0], [1, 1]], [[0, 0], [1, 1], [0, 1]]];
+      tris.forEach((t) => {
+        const el = document.createElement('div');
+        el.className = 'shard';
+        const pts = t.map(([a, b]) => [(x + a + (a % 1 ? 0 : j() * (x + a > 0 && x + a < COLS))) * cw, (y + b + j() * (y + b > 0 && y + b < ROWS)) * ch]);
+        const cx = pts.reduce((s, q) => s + q[0], 0) / 3, cy = pts.reduce((s, q) => s + q[1], 0) / 3;
+        Object.assign(el.style, {
+          left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px',
+          background: fills[(Math.random() * fills.length) | 0],
+          clipPath: `polygon(${pts.map(([a, b]) => `${a}px ${b}px`).join(',')})`,
+          transformOrigin: `${cx}px ${cy}px`,
+        });
+        layer.appendChild(el);
+        const ang = Math.atan2(cy - r.height / 2, cx - r.width / 2) + (Math.random() - 0.5) * 0.8;
+        const dist = 160 + Math.random() * 260;
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          el.style.transform = `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist + 120}px) rotate(${(Math.random() - 0.5) * 540}deg) scale(${0.5 + Math.random() * 0.4})`;
+          el.style.opacity = '0';
+        }));
+      });
+    }
+    addPetals(24, { x: r.left + r.width / 2, y: r.top + r.height / 2 });
+    setTimeout(() => { layer.innerHTML = ''; }, 1800);
   }
 
   // ---------- 2. Ovozli tabrik ----------
@@ -1006,7 +1062,8 @@
       if (id !== runId) return;
       el.textContent += chars[i++] || '';
       if (i < chars.length) typeTimer = setTimeout(step, chars[i - 1] === '.' || chars[i - 1] === '!' ? 260 : 38);
-      else { el.classList.add('done'); $('sign').textContent = '— ' + C.kimdan; $('sign').classList.add('on'); }
+      else { el.classList.add('done'); $('sign').textContent = '— ' + C.kimdan; $('sign').classList.add('on'); $('card').classList.remove('writing'); }
+      el.scrollTop = el.scrollHeight;
     };
     step();
   }
