@@ -1179,6 +1179,7 @@
     const parts2 = [];
     if (C.yosh) parts2.push(`${C.yosh} yosh`);
     if (bday) parts2.push(`${bday.getDate()}-${MONTHS[bday.getMonth()]}, ${bday.getFullYear()}`);
+    $('mTg').addEventListener('click', (e) => e.stopPropagation());
     $('mDate').textContent = parts2.join(' · ');
     const st = $('mStatus');
     if (bday) {
@@ -1189,43 +1190,40 @@
         let next = new Date(today.getFullYear(), bday.getMonth(), bday.getDate());
         if (next <= today) next = new Date(today.getFullYear() + 1, bday.getMonth(), bday.getDate());
         const days = Math.round((next - today) / 864e5);
-        st.textContent = `Keyingi tug'ilgan kuningizgacha: ${days} kun ⏳`;
+        st.textContent = C.yosh ? `${+C.yosh + 1} yoshgacha: ${days} kun ⏳` : `Keyingi tug'ilgan kuningizgacha: ${days} kun ⏳`;
       }
     } else st.hidden = true;
-    if (mainImg) $('mHero').src = mainImg.src; else $('mHeroBox').hidden = true;
 
-    const strip = $('mStrip');
-    gImgs.forEach((g) => {
-      const f = document.createElement('figure');
-      f.innerHTML = `<img src="${g.img.src}" alt="" loading="lazy"><figcaption></figcaption>`;
-      f.querySelector('figcaption').textContent = g.izoh;
-      f.addEventListener('click', () => openLb(g));
-      strip.appendChild(f);
+    // Kino titrlari
+    const nCandles = C.yosh ? String(C.yosh).length : 3;
+    const credits = [
+      ['Bosh qahramon', C.ism],
+      ["G'oya va muallif", C.kimdan],
+      ['Yulduzlar', `${N.toLocaleString('ru-RU')} ta`],
+      ['Atirgullar', '10 ta'],
+      ['Shamlar', `${nCandles} ta`],
+      ['Xotiralar', `${gImgs.length} ta surat`],
+      ['Tilaklar', 'cheksiz ✨'],
+    ];
+    const cr = $('mCredits');
+    credits.forEach(([k, v], i) => {
+      const row = document.createElement('div');
+      row.className = 'm-cr';
+      row.style.transitionDelay = (0.4 + i * 0.35).toFixed(2) + 's';
+      row.innerHTML = '<span></span><b></b>';
+      row.firstChild.textContent = k; row.lastChild.textContent = v;
+      cr.appendChild(row);
     });
-    if (!gImgs.length) strip.parentNode.hidden = true;
+    $('mClosing').textContent = C.yakunMatni || '';
+    const tg = String(C.telegram || '').replace(/^@|^https?:\/\/t\.me\//, '');
+    if (tg) { $('mTg').href = 'https://t.me/' + tg; $('mTg').textContent = `💬 ${C.kimdan}ga javob yozish`; } else $('mTg').hidden = true;
 
-    $('mMsg').textContent = C.tabrik;
-    $('mSign').textContent = '— ' + C.kimdan;
-    const wl = $('mWishes');
-    (C.tilaklar || []).forEach((w) => { const sp = document.createElement('span'); sp.textContent = w; wl.appendChild(sp); });
-    if (!(C.tilaklar || []).length) wl.parentNode.hidden = true;
-    $('mFoot').textContent = `${C.kimdan} tomonidan, chin qalbdan 🤍`;
-
-    // Bo'limlar ko'ringanda sekin paydo bo'ladi; buket ko'ringanda "o'sadi"
-    const bq = $('mBouquet');
     const io = new IntersectionObserver((ents) => ents.forEach((en) => {
       if (!en.isIntersecting) return;
       en.target.classList.add('vis');
-      if (en.target.contains(bq) && !bq.innerHTML) bq.innerHTML = `<svg viewBox="0 0 300 410" aria-label="Atirgul buketi">${buildBouquet().svg}</svg>`;
       io.unobserve(en.target);
-    }), { root: memory, threshold: 0.2 });
+    }), { root: memory, threshold: 0.15 });
     memory.querySelectorAll('.m-sec').forEach((el) => io.observe(el));
-    bq.addEventListener('click', () => {
-      const r = bq.getBoundingClientRect();
-      addPetals(22, { x: r.left + r.width / 2, y: r.top + r.height * 0.35 });
-      sfx('magic'); buzz(20);
-      bq.classList.remove('sway'); void bq.offsetWidth; bq.classList.add('sway');
-    });
   }
   function showMemory() {
     buildMemory();
