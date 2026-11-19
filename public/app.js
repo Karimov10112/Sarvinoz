@@ -366,12 +366,58 @@
       o.connect(g); g.connect(dest || master); o.start(t); o.stop(t + dur + 0.05);
     });
   }
-  function playSong() {
+  // Har bir kuy o'z "shinasi"ga chalinadi — kuy almashganda eskisi silliq so'nadi, ustma-ust tushmaydi
+  let songMode = 'hb', songBus = null, nextT = 0;
+  function startSong(mode) {
+    if (!actx || audio) return;
+    if (mode) songMode = mode;
+    clearTimeout(musicTimer);
+    if (songBus) { const old = songBus; old.gain.setTargetAtTime(0, actx.currentTime, 0.5); setTimeout(() => old.disconnect(), 4000); }
+    songBus = actx.createGain(); songBus.connect(musicBus);
+    nextT = 0;
+    loopSong();
+  }
+  function playSong() { startSong(); }
+  function loopSong() {
     if (!actx || !musicOn || audio) return;
+    if (songMode === 'end') playEnd(); else playHB();
+  }
+  function playHB() {
     const beat = 0.5; let t = actx.currentTime + 0.1, tb = t;
-    for (const [n, d] of SONG) { bell(t, NOTE(n), Math.max(1.2, d * beat * 2), 0.22, musicBus); t += d * beat; }
-    for (const [n, d] of BASS) { bell(tb, NOTE(n), d * beat * 1.5, 0.1, musicBus); tb += d * beat; }
-    musicTimer = setTimeout(playSong, (t - actx.currentTime + 2.5) * 1000);
+    for (const [n, d] of SONG) { bell(t, NOTE(n), Math.max(1.2, d * beat * 2), 0.22, songBus); t += d * beat; }
+    for (const [n, d] of BASS) { bell(tb, NOTE(n), d * beat * 1.5, 0.1, songBus); tb += d * beat; }
+    musicTimer = setTimeout(loopSong, (t - actx.currentTime + 2.5) * 1000);
+  }
+  // Yakun kuyi (o'zimiz tuzgan): C – Am – F – G, yumshoq akkordlar + music box arpedjio + sokin ohang
+  const END_CHORDS = [[60, 64, 67, 72], [57, 60, 64, 69], [53, 57, 60, 65], [55, 59, 62, 67]];
+  const END_MELODY = [
+    [[76, 2], [74, 1], [72, 1]], [[72, 3], [69, 1]], [[69, 2], [72, 1], [77, 1]], [[76, 3], [74, 1]],
+    [[76, 2], [79, 1], [76, 1]], [[74, 2], [72, 2]], [[72, 1], [74, 1], [76, 2]], [[74, 3], [0, 1]],
+  ];
+  const ARP = [0, 1, 2, 3, 2, 1, 2, 1];
+  function pad(t, notes, dur, vol) {
+    const f = actx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1100; f.connect(songBus);
+    notes.forEach((n) => [-6, 6].forEach((dt) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'triangle'; o.frequency.value = NOTE(n - 12); o.detune.value = dt;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 1.2);
+      g.gain.setValueAtTime(vol, t + dur - 0.4); g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 1.2);
+      o.connect(g); g.connect(f); o.start(t); o.stop(t + dur + 1.3);
+    }));
+  }
+  function playEnd() {
+    const beat = 0.62, bar = beat * 4;
+    let t = Math.max(actx.currentTime + 0.15, nextT);
+    for (let b = 0; b < 8; b++) {
+      const ch = END_CHORDS[b % 4], t0 = t + b * bar;
+      pad(t0, ch.slice(0, 3), bar, 0.032);
+      bell(t0, NOTE(ch[0] - 24), bar * 1.2, 0.1, songBus);
+      ARP.forEach((k, i) => bell(t0 + i * beat / 2, NOTE(ch[k] + 12), 1.6, 0.065, songBus));
+      let mt = t0;
+      END_MELODY[b].forEach(([n, d]) => { if (n) bell(mt, NOTE(n), Math.max(1.6, d * beat * 1.6), 0.2, songBus); mt += d * beat; });
+    }
+    nextT = t + 8 * bar;
+    musicTimer = setTimeout(loopSong, (nextT - actx.currentTime - 0.6) * 1000);
   }
   function sfx(type) {
     if (!actx || !musicOn) return;
@@ -1125,7 +1171,7 @@
     e.stopPropagation();
     musicOn = !musicOn; muteBtn.textContent = musicOn ? '🔊' : '🔇';
     if (audio) { musicOn ? audio.play().catch(() => {}) : audio.pause(); }
-    if (actx) { master.gain.value = musicOn ? 0.55 : 0; clearTimeout(musicTimer); if (musicOn) playSong(); }
+    if (actx) { master.gain.value = musicOn ? 0.55 : 0; clearTimeout(musicTimer); if (musicOn) startSong(); }
   });
 
   // ---------- 6. Kunga qarab salomlashish ----------
@@ -1177,14 +1223,16 @@
   const btn = $('startBtn');
   btn.disabled = false; btn.textContent = 'Ochish ✨';
   let opened = false, musicStarted = false;
-  const startMusic = () => {
-    if (musicStarted) return; musicStarted = true;
+  const startMusic = (mode = 'hb') => {
+    if (musicStarted) { if (mode !== songMode) startSong(mode); return; }
+    musicStarted = true;
     initAudio(); if (actx && actx.resume) actx.resume();
-    if (audio) audio.play().catch(() => {}); else playSong();
+    if (audio) audio.play().catch(() => {}); else startSong(mode);
+    const mb = $('mMusic'); if (mb) mb.classList.add('gone');
   };
   btn.addEventListener('click', async () => {
     if (opened) return; opened = true;
-    startMusic();
+    startMusic('hb');
     $('start').classList.add('opening');
     buzz(30);
     const g = $('gift').getBoundingClientRect();
@@ -1273,7 +1321,8 @@
     petalRain = true; meteorSky = true;
     setTimeout(() => meteor(), 1800);
   }
-  memory.addEventListener('pointerdown', startMusic);
+  memory.addEventListener('pointerdown', () => startMusic('end'));
+  $('mMusic').addEventListener('click', (e) => { e.stopPropagation(); startMusic('end'); });
   // Osmonga tegilsa — uchar yulduz
   memory.addEventListener('click', (e) => {
     if (e.target.closest('a, button')) return;
@@ -1283,7 +1332,7 @@
   $('mReplay').addEventListener('click', (e) => {
     e.stopPropagation();
     memory.classList.remove('on'); petalRain = false; meteorSky = false;
-    startMusic();
+    startMusic('hb');
     current = null; dissolve();
     setTimeout(run, 600);
   });
@@ -1292,6 +1341,7 @@
     e.stopPropagation();
     runId++; resetUI(); current = null; dissolve();
     showMemory();
+    if (musicStarted) startSong('end');
   });
 
   if (memMode) showMemory();

@@ -441,3 +441,11 @@ h1 { font-size: clamp(26px, 6vw, 44px); margin: 12px 0 6px; font-weight: 800; }
 .m-roll .m-cr { opacity: 1; transform: none; height: 58px; justify-content: center; }
 @keyframes roll { to { transform: translateY(-50%); } }
 .m-hint { margin: -6px 0 0; font-size: 12.5px; color: rgba(246,220,160,.5); }
+
+/* Musiqa tugmasi (yakun sahifasi) */
+.m-music { display: block; margin: 14px auto 0; padding: 9px 18px; border: 0; border-radius: 999px; cursor: pointer;
+  font: italic 500 15px 'Playfair Display', Georgia, serif; color: #2b1a12;
+  background: linear-gradient(180deg, #fff3d6, #e9c27a); box-shadow: 0 0 24px rgba(233,194,122,.45);
+  animation: pulse2 2.4s ease-in-out infinite; transition: opacity .6s, transform .6s; }
+@keyframes pulse2 { 50% { box-shadow: 0 0 40px rgba(233,194,122,.85), 0 0 0 7px rgba(233,194,122,.12); } }
+.m-music.gone { opacity: 0; transform: scale(.9); pointer-events: none; height: 0; padding: 0; margin: 0; overflow: hidden; }
